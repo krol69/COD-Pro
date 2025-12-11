@@ -434,7 +434,12 @@ main {
                 }
 
                 if(abs(get_val(XB1_RX)) < 40) {
-                    direction = (get_val(XB1_RX) > 0) ? 1 : -1;
+                    if(get_val(XB1_RX) > 0) {
+                        direction = 1;
+                    }
+                    else {
+                        direction = -1;
+                    }
                     set_val(XB1_RX, get_val(XB1_RX) + (assist_strength * direction));
                 }
             }
