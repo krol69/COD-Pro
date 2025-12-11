@@ -102,32 +102,11 @@ define
 // VARIABLES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Feature Toggles (optimized defaults for BO7)
-int features[8] = {
-    TRUE,   // Anti-Recoil (ON by default)
-    FALSE,  // Turbo Jump
-    FALSE,  // Slide Cancel
-    FALSE,  // Bhop
-    FALSE,  // Snake Movement
-    FALSE,  // Wall Bounce
-    TRUE,   // Hair Triggers (ON for responsiveness)
-    FALSE   // Block Rumble (OFF to use rumble for anti-recoil)
-};
+// Feature Toggles (will be set in init)
+int features[8];
 
-// Configuration Values (perfect defaults for 1000Hz/240Hz/200fps)
-int values[11] = {
-    35,     // AR_VERT: Vertical strength (auto-adapts)
-    0,      // AR_HORI: Horizontal strength
-    12,     // AR_DEADZONE: Movement deadzone
-    75,     // AR_ADAPT: Adaptive scaling %
-    1,      // SC_MODE: BO7 Optimized mode
-    280,    // SC_DELAY: Perfect for BO7 at 200fps
-    45,     // BHOP_TIMING: Perfect for 200fps
-    8,      // SNAKE_SPEED: Balanced evasion
-    25,     // SNAKE_RANGE: Effective range
-    30,     // WB_STRENGTH: Subtle assistance
-    25      // HT_THRESHOLD: Hair trigger sensitivity
-};
+// Configuration Values (will be set in init)
+int values[11];
 
 // Runtime Variables
 int ar_adaptive_mult;
@@ -150,6 +129,29 @@ int perf_last_cpu;
 init {
     // Set optimal polling rate for performance
     vm_tctrl(POLL_RATE - 1);
+
+    // Initialize feature toggles (optimized defaults for BO7)
+    features[ANTI_RECOIL] = TRUE;   // ON by default
+    features[TURBO_JUMP] = FALSE;
+    features[SLIDE_CANCEL] = FALSE;
+    features[BHOP] = FALSE;
+    features[SNAKE_MOVE] = FALSE;
+    features[WALL_BOUNCE] = FALSE;
+    features[HAIR_TRIGGERS] = TRUE; // ON for responsiveness
+    features[BLOCK_RUMBLE] = FALSE; // OFF to use rumble for anti-recoil
+
+    // Initialize configuration values (perfect defaults for 1000Hz/240Hz/200fps)
+    values[AR_VERT] = 35;       // Vertical strength (auto-adapts)
+    values[AR_HORI] = 0;        // Horizontal strength
+    values[AR_DEADZONE] = 12;   // Movement deadzone
+    values[AR_ADAPT] = 75;      // Adaptive scaling %
+    values[SC_MODE] = 1;        // BO7 Optimized mode
+    values[SC_DELAY] = 280;     // Perfect for BO7 at 200fps
+    values[BHOP_TIMING] = 45;   // Perfect for 200fps
+    values[SNAKE_SPEED] = 8;    // Balanced evasion
+    values[SNAKE_RANGE] = 25;   // Effective range
+    values[WB_STRENGTH] = 30;   // Subtle assistance
+    values[HT_THRESHOLD] = 25;  // Hair trigger sensitivity
 
     // Initialize runtime variables
     ar_adaptive_mult = 100;
