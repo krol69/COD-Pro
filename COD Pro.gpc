@@ -122,6 +122,21 @@ int perf_loop_count;
 int perf_high_cpu_count;
 int perf_last_cpu;
 
+// Temporary variables used in main loop (required by GPC)
+int current_cpu;
+int rumble;
+int vert_strength;
+int hori_strength;
+int hori_micro;
+int movement_mag;
+int movement_factor;
+int in_sprint;
+int snake_offset;
+int near_wall;
+int looking_angle;
+int assist_strength;
+int direction;
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // INITIALIZATION
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -188,7 +203,7 @@ main {
 
     // Monitor CPU usage every 100 loops
     if(perf_loop_count >= 100) {
-        int current_cpu = get_info(CPU_USAGE);
+        current_cpu = get_info(CPU_USAGE);
 
         // Track high CPU usage
         if(current_cpu > 80) {
@@ -259,7 +274,7 @@ main {
     if(features[ANTI_RECOIL] && get_val(XB1_LT) > 50 && get_val(XB1_RT) > 50) {
 
         // Get rumble for adaptive weapon detection
-        int rumble = get_rumble(RUMBLE_B);
+        rumble = get_rumble(RUMBLE_B);
         if(rumble < get_rumble(RUMBLE_A) && get_rumble(RUMBLE_A) < 100) {
             rumble = get_rumble(RUMBLE_A);
         }
@@ -286,8 +301,8 @@ main {
         ar_last_rumble = rumble;
 
         // Calculate adaptive strength
-        int vert_strength = (values[AR_VERT] * ar_adaptive_mult) / 100;
-        int hori_strength = (values[AR_HORI] * ar_adaptive_mult) / 100;
+        vert_strength = (values[AR_VERT] * ar_adaptive_mult) / 100;
+        hori_strength = (values[AR_HORI] * ar_adaptive_mult) / 100;
 
         // Multi-stage burst compensation
         if(rumble > 15 && rumble < 95) {
@@ -312,15 +327,15 @@ main {
 
         // Apply horizontal compensation
         if(hori_strength != 0) {
-            int hori_micro = (get_rtime() % 3) - 1;
+            hori_micro = (get_rtime() % 3) - 1;
             set_val(XB1_RX, get_val(XB1_RX) + hori_strength + hori_micro);
         }
 
         // Apply vertical compensation with movement awareness
-        int movement_mag = isqrt(pow(get_val(XB1_LX), 2) + pow(get_val(XB1_LY), 2));
+        movement_mag = isqrt(pow(get_val(XB1_LX), 2) + pow(get_val(XB1_LY), 2));
 
         if(movement_mag > (values[AR_DEADZONE] * 3277)) {
-            int movement_factor = (movement_mag / 6554) + values[AR_DEADZONE];
+            movement_factor = (movement_mag / 6554) + values[AR_DEADZONE];
             set_val(XB1_RY, get_val(XB1_RY) + vert_strength + movement_factor);
         }
         else {
@@ -347,7 +362,7 @@ main {
     // ═══════════════════════════════════════════════════════════════════════════
 
     if(features[SLIDE_CANCEL] && event_press(XB1_B)) {
-        int in_sprint = get_val(XB1_LY) < -30;
+        in_sprint = get_val(XB1_LY) < -30;
 
         if(in_sprint) {
             if(values[SC_MODE] == 0) {
@@ -392,7 +407,7 @@ main {
             snake_timer = 0;
         }
 
-        int snake_offset = snake_direction * values[SNAKE_RANGE] * 655;
+        snake_offset = snake_direction * values[SNAKE_RANGE] * 655;
         set_val(XB1_LX, get_val(XB1_LX) + snake_offset);
     }
     else {
@@ -404,22 +419,22 @@ main {
     // ═══════════════════════════════════════════════════════════════════════════
 
     if(features[WALL_BOUNCE]) {
-        int near_wall = abs(get_val(XB1_LX)) > 20 || abs(get_val(XB1_LY)) > 20;
-        int looking_angle = abs(get_val(XB1_RX)) > 15;
+        near_wall = abs(get_val(XB1_LX)) > 20 || abs(get_val(XB1_LY)) > 20;
+        looking_angle = abs(get_val(XB1_RX)) > 15;
 
         if(get_val(XB1_A) > 50 && near_wall && looking_angle) {
             wb_assist_timer += get_rtime();
 
             // Subtle aim assist
             if(wb_assist_timer > 50 && wb_assist_timer < 250) {
-                int assist_strength = values[WB_STRENGTH] / 10;
+                assist_strength = values[WB_STRENGTH] / 10;
 
                 if(get_val(XB1_RY) > -15) {
                     set_val(XB1_RY, get_val(XB1_RY) - assist_strength);
                 }
 
                 if(abs(get_val(XB1_RX)) < 40) {
-                    int direction = (get_val(XB1_RX) > 0) ? 1 : -1;
+                    direction = (get_val(XB1_RX) > 0) ? 1 : -1;
                     set_val(XB1_RX, get_val(XB1_RX) + (assist_strength * direction));
                 }
             }
