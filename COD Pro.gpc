@@ -137,6 +137,12 @@ int looking_angle;
 int assist_strength;
 int direction;
 
+// Helper function variables (required by GPC - must be global)
+int isqrt_result;
+int isqrt_temp;
+int pow_result;
+int pow_i;
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // INITIALIZATION
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -522,14 +528,13 @@ combo wall_bounce_jump {
 
 function isqrt(int x) {
     if(x <= 0) return 0;
-    int result = x;
-    int temp;
-    temp = (result + (x / result)) / 2;
-    while(temp < result) {
-        result = temp;
-        temp = (result + (x / result)) / 2;
+    isqrt_result = x;
+    isqrt_temp = (isqrt_result + (x / isqrt_result)) / 2;
+    while(isqrt_temp < isqrt_result) {
+        isqrt_result = isqrt_temp;
+        isqrt_temp = (isqrt_result + (x / isqrt_result)) / 2;
     }
-    return result;
+    return isqrt_result;
 }
 
 function pow(int base, int exp) {
@@ -537,12 +542,11 @@ function pow(int base, int exp) {
     if(exp == 1) return base;
     if(exp == 2) return base * base;
 
-    int result = base;
-    int i;
-    for(i = 1; i < exp; i++) {
-        result *= base;
+    pow_result = base;
+    for(pow_i = 1; pow_i < exp; pow_i++) {
+        pow_result *= base;
     }
-    return result;
+    return pow_result;
 }
 
 /*
