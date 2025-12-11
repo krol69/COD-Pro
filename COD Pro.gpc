@@ -340,8 +340,8 @@ main {
         // Apply vertical compensation with movement awareness
         movement_mag = isqrt(pow(get_val(XB1_LX), 2) + pow(get_val(XB1_LY), 2));
 
-        if(movement_mag > (values[AR_DEADZONE] * 3277)) {
-            movement_factor = (movement_mag / 6554) + values[AR_DEADZONE];
+        if(movement_mag > values[AR_DEADZONE]) {
+            movement_factor = (movement_mag / 2) + values[AR_DEADZONE];
             set_val(XB1_RY, get_val(XB1_RY) + vert_strength + movement_factor);
         }
         else {
@@ -413,7 +413,7 @@ main {
             snake_timer = 0;
         }
 
-        snake_offset = snake_direction * values[SNAKE_RANGE] * 655;
+        snake_offset = snake_direction * values[SNAKE_RANGE];
         set_val(XB1_LX, get_val(XB1_LX) + snake_offset);
     }
     else {
