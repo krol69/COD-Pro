@@ -1,0 +1,1059 @@
+/*
+    ═══════════════════════════════════════════════════════════════════════════════
+
+         ███████╗ ██████╗ ██████╗     ██████╗ ██████╗  ██████╗     ██╗   ██╗ █████╗
+        ██╔════╝██╔═══██╗██╔══██╗    ██╔══██╗██╔══██╗██╔═══██╗    ██║   ██║██╔══██╗
+        █████╗  ██║   ██║██║  ██║    ██████╔╝██████╔╝██║   ██║    ██║   ██║╚██████║
+        ██╔══╝  ██║   ██║██║  ██║    ██╔═══╝ ██╔══██╗██║   ██║    ╚██╗ ██╔╝ ╚═══██║
+        ███████╗╚██████╔╝██████╔╝    ██║     ██║  ██║╚██████╔╝     ╚████╔╝  █████╔╝
+        ╚══════╝ ╚═════╝ ╚═════╝     ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═══╝   ╚════╝
+
+    ═══════════════════════════════════════════════════════════════════════════════
+                        MODULAR CONFIGURATION EDITION
+    ═══════════════════════════════════════════════════════════════════════════════
+
+    Version: 9.1.0 - Tournament Grade
+    Platform: PC (1000Hz Wired Xbox Controller)
+    Polling: Ultra-Low Latency (vm_timing = 0)
+    Game: Call of Duty Black Ops 7 (BO7)
+
+    ═══════════════════════════════════════════════════════════════════════════════
+    FEATURES - ALL TOGGLEABLE & CUSTOMIZABLE
+    ═══════════════════════════════════════════════════════════════════════════════
+
+    [1] MOVEMENT RESET (Slide Cancel)
+        • Sprint animation reset for faster movement
+        • 3 modes: Legacy, BO7, Jump Cancel
+        • Customizable timing and activation
+
+    [2] ANTI-RECOIL (Dynamic Compensation)
+        • Adaptive vertical & horizontal recoil control
+        • Multiple activation modes
+        • Weapon-adaptive rumble detection
+
+    [3] PRONE CYCLING (Snaking)
+        • Rapid crouch/prone/stand evasion
+        • Adjustable speed and pattern
+        • Auto-strafe integration
+
+    [4] JUMP CANCEL (Wall Bounce)
+        • Timed wall jump assistance
+        • Subtle aim assist during bounce
+        • Perfect timing automation
+
+    [5] INSTANT DROP (Drop Shot)
+        • Instant prone while firing
+        • Multiple activation modes
+        • Quick re-stand option
+
+    [6] REPEATED JUMP (Bunny Hop)
+        • Auto-jump on landing detection
+        • Maintains momentum
+        • Movement-based activation
+
+    [7] RAPID WEAPON SWAP (YY Cancel)
+        • Animation cancel via weapon swap
+        • Adjustable swap speed
+        • Toggle or hold modes
+
+    [8] AUTO SPRINT
+        • Automatic sprint on forward movement
+        • Configurable delay
+        • Prevents sprint cancel conflicts
+
+    ═══════════════════════════════════════════════════════════════════════════════
+    MENU CONTROLS
+    ═══════════════════════════════════════════════════════════════════════════════
+
+    Open Menu:          Hold LT + Press OPTIONS/MENU
+    Navigate:           D-PAD UP/DOWN (Change setting)
+                       D-PAD LEFT/RIGHT (Adjust value)
+    Toggle Feature:     Press A/CROSS
+    Save & Exit:        Press B/CIRCLE or OPTIONS again
+    Reset to Default:   Hold LT + LB + RB + Press VIEW
+
+    ═══════════════════════════════════════════════════════════════════════════════
+    ACTIVATION MODES (Configurable per feature)
+    ═══════════════════════════════════════════════════════════════════════════════
+
+    [0] HOLD        - Active while key held
+    [1] TOGGLE      - Press to enable/disable
+    [2] LONG PRESS  - Hold for 500ms to activate
+    [3] CONDITIONAL - Active when specific condition met (e.g., ADS + Fire)
+
+    ═══════════════════════════════════════════════════════════════════════════════
+*/
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PERFORMANCE OPTIMIZATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+int vm_timing = 0; // Ultra-low latency mode (1000Hz polling)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BUTTON DEFINITIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+define
+    // Primary Controls
+    BTN_FIRE        = XB1_RT,
+    BTN_ADS         = XB1_LT,
+    BTN_JUMP        = XB1_A,
+    BTN_CROUCH      = XB1_B,
+    BTN_RELOAD      = XB1_X,
+    BTN_SWAP        = XB1_Y,
+    BTN_SPRINT      = XB1_LS,
+    BTN_MELEE       = XB1_RS,
+    BTN_LB          = XB1_LB,
+    BTN_RB          = XB1_RB,
+
+    // Menu Controls
+    BTN_MENU        = XB1_MENU,
+    BTN_VIEW        = XB1_VIEW,
+    BTN_UP          = XB1_UP,
+    BTN_DOWN        = XB1_DOWN,
+    BTN_LEFT        = XB1_LEFT,
+    BTN_RIGHT       = XB1_RIGHT,
+
+    // Analog Sticks
+    STICK_LX        = XB1_LX,
+    STICK_LY        = XB1_LY,
+    STICK_RX        = XB1_RX,
+    STICK_RY        = XB1_RY,
+
+    // Feature Indices
+    FEAT_MOVEMENT_RESET = 0,
+    FEAT_ANTI_RECOIL    = 1,
+    FEAT_SNAKING        = 2,
+    FEAT_WALL_BOUNCE    = 3,
+    FEAT_DROP_SHOT      = 4,
+    FEAT_BUNNY_HOP      = 5,
+    FEAT_WEAPON_SWAP    = 6,
+    FEAT_AUTO_SPRINT    = 7,
+
+    // Activation Modes
+    MODE_HOLD           = 0,
+    MODE_TOGGLE         = 1,
+    MODE_LONG_PRESS     = 2,
+    MODE_CONDITIONAL    = 3,
+
+    // Key Mappings (for menu selection)
+    KEY_NONE    = 0,
+    KEY_RT      = 1,
+    KEY_LT      = 2,
+    KEY_RB      = 3,
+    KEY_LB      = 4,
+    KEY_A       = 5,
+    KEY_B       = 6,
+    KEY_X       = 7,
+    KEY_Y       = 8,
+    KEY_LS      = 9,
+    KEY_RS      = 10,
+    KEY_UP      = 11,
+    KEY_DOWN    = 12,
+    KEY_LEFT    = 13,
+    KEY_RIGHT   = 14,
+
+    // Storage Slots (for persistence)
+    STORAGE_FEAT_TOGGLES    = 0,
+    STORAGE_ACTIVATION_MODE = 1,
+    STORAGE_PRIMARY_KEYS    = 2,
+    STORAGE_TIMING_VALUES   = 3,
+    STORAGE_RECOIL_VERT     = 4,
+    STORAGE_RECOIL_HORI     = 5,
+
+    // Timing Constants (1ms precision)
+    TIMING_MIN      = 1,
+    TIMING_MAX      = 500,
+    LONG_PRESS_TIME = 500; // 500ms for long press
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONFIGURATION ARRAYS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Feature Enable/Disable (8 features)
+int feature_enabled[8] = {
+    FALSE,  // [0] Movement Reset
+    TRUE,   // [1] Anti-Recoil (default ON)
+    FALSE,  // [2] Snaking
+    FALSE,  // [3] Wall Bounce
+    FALSE,  // [4] Drop Shot
+    FALSE,  // [5] Bunny Hop
+    FALSE,  // [6] Weapon Swap
+    FALSE   // [7] Auto Sprint
+};
+
+// Feature Active State (runtime toggles)
+int feature_active[8];
+
+// Activation Mode per Feature
+int activation_mode[8] = {
+    MODE_HOLD,          // [0] Movement Reset: Hold
+    MODE_CONDITIONAL,   // [1] Anti-Recoil: Conditional (ADS + Fire)
+    MODE_HOLD,          // [2] Snaking: Hold
+    MODE_HOLD,          // [3] Wall Bounce: Hold
+    MODE_CONDITIONAL,   // [4] Drop Shot: Conditional (Fire)
+    MODE_HOLD,          // [5] Bunny Hop: Hold
+    MODE_TOGGLE,        // [6] Weapon Swap: Toggle
+    MODE_TOGGLE         // [7] Auto Sprint: Toggle
+};
+
+// Primary Activation Key per Feature
+int key_primary[8] = {
+    KEY_B,      // [0] Movement Reset: B (Crouch)
+    KEY_RT,     // [1] Anti-Recoil: RT (Fire)
+    KEY_DOWN,   // [2] Snaking: D-Pad Down
+    KEY_A,      // [3] Wall Bounce: A (Jump)
+    KEY_RT,     // [4] Drop Shot: RT (Fire)
+    KEY_A,      // [5] Bunny Hop: A (Jump)
+    KEY_Y,      // [6] Weapon Swap: Y
+    KEY_LS      // [7] Auto Sprint: LS (Sprint)
+};
+
+// Secondary Key (for conditional modes)
+int key_secondary[8] = {
+    KEY_NONE,   // [0] Movement Reset: None
+    KEY_LT,     // [1] Anti-Recoil: LT (ADS)
+    KEY_NONE,   // [2] Snaking: None
+    KEY_NONE,   // [3] Wall Bounce: None
+    KEY_LT,     // [4] Drop Shot: LT (ADS) - optional
+    KEY_NONE,   // [5] Bunny Hop: None
+    KEY_NONE,   // [6] Weapon Swap: None
+    KEY_NONE    // [7] Auto Sprint: None
+};
+
+// Timing Values (in milliseconds)
+int timing_delay[8] = {
+    280,    // [0] Movement Reset: Slide cancel delay (280ms optimal for BO7)
+    10,     // [1] Anti-Recoil: Response delay (10ms smooth)
+    120,    // [2] Snaking: Cycle speed (120ms per strafe)
+    300,    // [3] Wall Bounce: Jump timing window (300ms)
+    50,     // [4] Drop Shot: Prone delay (50ms instant)
+    150,    // [5] Bunny Hop: Jump interval (150ms between jumps)
+    100,    // [6] Weapon Swap: Swap delay (100ms YY timing)
+    200     // [7] Auto Sprint: Sprint activation delay (200ms)
+};
+
+// Anti-Recoil Configuration
+int recoil_vertical = 35;       // Vertical compensation (0-100)
+int recoil_horizontal = 0;      // Horizontal compensation (-50 to +50)
+int recoil_adaptive = 75;       // Adaptive scaling (0-100)
+
+// Movement Reset (Slide Cancel) Mode
+int slide_cancel_mode = 1;      // 0=Legacy, 1=BO7, 2=Jump
+
+// Snaking Configuration
+int snake_speed = 8;            // Strafe speed (5-15)
+int snake_range = 25;           // Strafe range (15-40)
+
+// Wall Bounce Configuration
+int wall_bounce_strength = 30;  // Assist strength (10-50)
+
+// Drop Shot Configuration
+int dropshot_restand = TRUE;    // Auto re-stand after kill
+
+// Weapon Swap Configuration
+int weapon_swap_count = 2;      // Number of swaps (1-4)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RUNTIME VARIABLES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Input State Tracking
+int is_firing, is_aiming, is_moving_forward, is_jumping, is_crouching;
+
+// Feature Timers
+int timer_movement_reset;
+int timer_anti_recoil;
+int timer_snaking;
+int timer_wall_bounce;
+int timer_drop_shot;
+int timer_bunny_hop;
+int timer_weapon_swap;
+int timer_auto_sprint;
+
+// Key Press Timers (for long press detection)
+int key_press_timer[8];
+int key_press_state[8];
+
+// Anti-Recoil State
+int ar_rumble_last;
+int ar_adaptive_mult = 100;
+int ar_burst_timer;
+
+// Snaking State
+int snake_direction = 1;
+int snake_timer;
+
+// Wall Bounce State
+int wb_active;
+int wb_timer;
+
+// Drop Shot State
+int drop_active;
+int drop_restand_pending;
+
+// Weapon Swap State
+int weapon_swap_active;
+int weapon_swap_counter;
+
+// Auto Sprint State
+int auto_sprint_active;
+int auto_sprint_timer;
+
+// Menu System Variables
+int menu_active = FALSE;
+int menu_category = 0;      // 0=Features, 1=Activation, 2=Keys, 3=Timing, 4=Advanced
+int menu_item = 0;
+int menu_blink_timer;
+int menu_needs_save = FALSE;
+
+// LED State
+int led_state = 0;
+int led_timer;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+init {
+    // Set ultra-low latency mode
+    vm_tctrl(vm_timing);
+
+    // Load settings from persistent storage
+    load_settings();
+
+    // Initialize all timers
+    timer_movement_reset = 0;
+    timer_anti_recoil = 0;
+    timer_snaking = 0;
+    timer_wall_bounce = 0;
+    timer_drop_shot = 0;
+    timer_bunny_hop = 0;
+    timer_weapon_swap = 0;
+    timer_auto_sprint = 0;
+
+    // Initialize key press tracking
+    int i;
+    for(i = 0; i < 8; i++) {
+        key_press_timer[i] = 0;
+        key_press_state[i] = FALSE;
+        feature_active[i] = FALSE;
+    }
+
+    // Set initial LED state (blue = ready)
+    led_set(LED_4, 0);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+main {
+
+    // Update input states
+    update_input_states();
+
+    // Check for menu activation: Hold LT + Press OPTIONS
+    if(get_val(BTN_ADS) > 90 && event_press(BTN_MENU) && !menu_active) {
+        menu_active = TRUE;
+        menu_category = 0;
+        menu_item = 0;
+    }
+
+    // Handle menu system
+    if(menu_active) {
+        handle_menu();
+        update_led_status();
+        return; // Skip gameplay features while in menu
+    }
+
+    // Check for reset to defaults: Hold LT + LB + RB + Press VIEW
+    if(get_val(BTN_ADS) > 90 && get_val(BTN_LB) > 50 && get_val(BTN_RB) > 50 && event_press(BTN_VIEW)) {
+        reset_to_defaults();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FEATURE ACTIVATION LOGIC
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    update_feature_states();
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [1] MOVEMENT RESET (Slide Cancel)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if(feature_enabled[FEAT_MOVEMENT_RESET] && feature_active[FEAT_MOVEMENT_RESET]) {
+        if(event_press(BTN_CROUCH) && is_moving_forward) {
+            switch(slide_cancel_mode) {
+                case 0:
+                    combo_run(combo_slide_cancel_legacy);
+                    break;
+                case 1:
+                    combo_run(combo_slide_cancel_bo7);
+                    break;
+                case 2:
+                    combo_run(combo_slide_cancel_jump);
+                    break;
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [2] ANTI-RECOIL (Dynamic Compensation)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if(feature_enabled[FEAT_ANTI_RECOIL] && feature_active[FEAT_ANTI_RECOIL]) {
+        apply_anti_recoil();
+    } else {
+        ar_burst_timer = 0;
+        ar_adaptive_mult = 100;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [3] SNAKING (Prone Cycling)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if(feature_enabled[FEAT_SNAKING] && feature_active[FEAT_SNAKING]) {
+        apply_snaking();
+    } else {
+        snake_timer = 0;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [4] WALL BOUNCE (Jump Cancel)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if(feature_enabled[FEAT_WALL_BOUNCE] && feature_active[FEAT_WALL_BOUNCE]) {
+        apply_wall_bounce();
+    } else {
+        wb_timer = 0;
+        wb_active = FALSE;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [5] DROP SHOT (Instant Prone)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if(feature_enabled[FEAT_DROP_SHOT] && feature_active[FEAT_DROP_SHOT]) {
+        if(is_firing && !drop_active) {
+            combo_run(combo_drop_shot);
+            drop_active = TRUE;
+        }
+    } else {
+        drop_active = FALSE;
+    }
+
+    // Auto re-stand after kill (if enabled)
+    if(drop_restand_pending && dropshot_restand) {
+        if(!is_firing && get_ptime(BTN_FIRE) > 1000) {
+            set_val(BTN_CROUCH, 100);
+            wait(50);
+            set_val(BTN_CROUCH, 0);
+            drop_restand_pending = FALSE;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [6] BUNNY HOP (Repeated Jump)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if(feature_enabled[FEAT_BUNNY_HOP] && feature_active[FEAT_BUNNY_HOP]) {
+        if(is_jumping && !combo_running(combo_bunny_hop)) {
+            timer_bunny_hop += get_rtime();
+            if(timer_bunny_hop >= timing_delay[FEAT_BUNNY_HOP]) {
+                combo_run(combo_bunny_hop);
+                timer_bunny_hop = 0;
+            }
+        } else if(!is_jumping) {
+            timer_bunny_hop = 0;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [7] WEAPON SWAP (YY Cancel)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if(feature_enabled[FEAT_WEAPON_SWAP] && feature_active[FEAT_WEAPON_SWAP]) {
+        if(event_press(BTN_SWAP) && !weapon_swap_active) {
+            weapon_swap_active = TRUE;
+            weapon_swap_counter = 0;
+            combo_run(combo_weapon_swap);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [8] AUTO SPRINT
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if(feature_enabled[FEAT_AUTO_SPRINT] && feature_active[FEAT_AUTO_SPRINT]) {
+        if(is_moving_forward && !is_firing) {
+            auto_sprint_timer += get_rtime();
+            if(auto_sprint_timer >= timing_delay[FEAT_AUTO_SPRINT]) {
+                set_val(BTN_SPRINT, 100);
+            }
+        } else {
+            auto_sprint_timer = 0;
+        }
+    }
+
+    // Update LED status
+    update_led_status();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INPUT STATE UPDATE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function update_input_states() {
+    is_firing = get_val(BTN_FIRE) > 50;
+    is_aiming = get_val(BTN_ADS) > 50;
+    is_moving_forward = get_val(STICK_LY) < -30;
+    is_jumping = get_val(BTN_JUMP) > 50;
+    is_crouching = get_val(BTN_CROUCH) > 50;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FEATURE STATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function update_feature_states() {
+    int i;
+    for(i = 0; i < 8; i++) {
+        if(!feature_enabled[i]) {
+            feature_active[i] = FALSE;
+            continue;
+        }
+
+        int primary_pressed = is_key_pressed(key_primary[i]);
+        int secondary_pressed = is_key_pressed(key_secondary[i]);
+
+        switch(activation_mode[i]) {
+            case MODE_HOLD:
+                // Active while primary key held
+                feature_active[i] = primary_pressed;
+                break;
+
+            case MODE_TOGGLE:
+                // Toggle on primary key press
+                if(primary_pressed && !key_press_state[i]) {
+                    feature_active[i] = !feature_active[i];
+                    key_press_state[i] = TRUE;
+                } else if(!primary_pressed) {
+                    key_press_state[i] = FALSE;
+                }
+                break;
+
+            case MODE_LONG_PRESS:
+                // Activate after holding primary key for 500ms
+                if(primary_pressed) {
+                    key_press_timer[i] += get_rtime();
+                    if(key_press_timer[i] >= LONG_PRESS_TIME && !key_press_state[i]) {
+                        feature_active[i] = !feature_active[i];
+                        key_press_state[i] = TRUE;
+                    }
+                } else {
+                    key_press_timer[i] = 0;
+                    key_press_state[i] = FALSE;
+                }
+                break;
+
+            case MODE_CONDITIONAL:
+                // Active when primary AND secondary keys pressed
+                if(key_secondary[i] == KEY_NONE) {
+                    feature_active[i] = primary_pressed;
+                } else {
+                    feature_active[i] = primary_pressed && secondary_pressed;
+                }
+                break;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// KEY PRESS DETECTION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function is_key_pressed(int key_code) {
+    switch(key_code) {
+        case KEY_NONE:      return FALSE;
+        case KEY_RT:        return get_val(BTN_FIRE) > 50;
+        case KEY_LT:        return get_val(BTN_ADS) > 50;
+        case KEY_RB:        return get_val(BTN_RB) > 50;
+        case KEY_LB:        return get_val(BTN_LB) > 50;
+        case KEY_A:         return get_val(BTN_JUMP) > 50;
+        case KEY_B:         return get_val(BTN_CROUCH) > 50;
+        case KEY_X:         return get_val(BTN_RELOAD) > 50;
+        case KEY_Y:         return get_val(BTN_SWAP) > 50;
+        case KEY_LS:        return get_val(BTN_SPRINT) > 50;
+        case KEY_RS:        return get_val(BTN_MELEE) > 50;
+        case KEY_UP:        return get_val(BTN_UP) > 50;
+        case KEY_DOWN:      return get_val(BTN_DOWN) > 50;
+        case KEY_LEFT:      return get_val(BTN_LEFT) > 50;
+        case KEY_RIGHT:     return get_val(BTN_RIGHT) > 50;
+    }
+    return FALSE;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANTI-RECOIL IMPLEMENTATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function apply_anti_recoil() {
+    if(!is_aiming || !is_firing) {
+        ar_burst_timer = 0;
+        return;
+    }
+
+    // Get rumble for adaptive detection
+    int rumble = get_rumble(RUMBLE_B);
+    if(rumble < get_rumble(RUMBLE_A) && get_rumble(RUMBLE_A) < 100) {
+        rumble = get_rumble(RUMBLE_A);
+    }
+
+    // Adaptive weapon detection
+    if(rumble > 20 && rumble < 90) {
+        if(rumble > 60) {
+            ar_adaptive_mult = 100 + ((rumble - 60) * recoil_adaptive / 30);
+        } else if(rumble > 40) {
+            ar_adaptive_mult = 90 + ((rumble - 40) * recoil_adaptive / 50);
+        } else {
+            ar_adaptive_mult = 80 + ((rumble - 20) * recoil_adaptive / 100);
+        }
+    } else {
+        ar_adaptive_mult = 100;
+    }
+
+    // Calculate recoil strength
+    int vert_strength = (recoil_vertical * ar_adaptive_mult) / 100;
+    int hori_strength = (recoil_horizontal * ar_adaptive_mult) / 100;
+
+    // Burst boost (first shots)
+    if(rumble > 15 && rumble < 95) {
+        ar_burst_timer += get_rtime();
+
+        if(ar_burst_timer < 200) {
+            vert_strength = vert_strength * 2 + (rumble / 2);
+        } else if(ar_burst_timer < 1000) {
+            vert_strength = vert_strength + (rumble / 3);
+        } else {
+            vert_strength = vert_strength + (rumble / 4);
+        }
+    } else {
+        ar_burst_timer = 0;
+    }
+
+    // Apply horizontal compensation
+    if(hori_strength != 0) {
+        set_val(STICK_RX, clamp(get_val(STICK_RX) + hori_strength, -100, 100));
+    }
+
+    // Apply vertical compensation (downward)
+    set_val(STICK_RY, clamp(get_val(STICK_RY) + vert_strength, -100, 100));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SNAKING IMPLEMENTATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function apply_snaking() {
+    if(!is_crouching && get_val(BTN_DOWN) < 10) {
+        snake_timer = 0;
+        return;
+    }
+
+    snake_timer += get_rtime();
+
+    if(snake_timer >= (100 / snake_speed)) {
+        snake_direction *= -1;
+        snake_timer = 0;
+    }
+
+    int snake_offset = snake_direction * snake_range * 655;
+    set_val(STICK_LX, clamp(get_val(STICK_LX) + snake_offset, -10000, 10000));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WALL BOUNCE IMPLEMENTATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function apply_wall_bounce() {
+    int near_wall = abs(get_val(STICK_LX)) > 20 || abs(get_val(STICK_LY)) > 20;
+    int looking_angle = abs(get_val(STICK_RX)) > 15;
+
+    if(is_jumping && near_wall && looking_angle) {
+        wb_timer += get_rtime();
+        wb_active = TRUE;
+
+        // Subtle aim assist
+        if(wb_timer > 50 && wb_timer < 250) {
+            int assist_strength = wall_bounce_strength / 10;
+
+            if(get_val(STICK_RY) > -15) {
+                set_val(STICK_RY, get_val(STICK_RY) - assist_strength);
+            }
+
+            if(abs(get_val(STICK_RX)) < 40) {
+                int direction = (get_val(STICK_RX) > 0) ? 1 : -1;
+                set_val(STICK_RX, get_val(STICK_RX) + (assist_strength * direction));
+            }
+        }
+
+        // Perfect bounce timing
+        if(wb_timer > timing_delay[FEAT_WALL_BOUNCE] - 20 && wb_timer < timing_delay[FEAT_WALL_BOUNCE] + 20) {
+            if(!combo_running(combo_wall_bounce)) {
+                combo_run(combo_wall_bounce);
+            }
+        }
+    } else {
+        wb_timer = 0;
+        wb_active = FALSE;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MENU SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function handle_menu() {
+    // Exit menu
+    if(event_press(BTN_MENU) || event_press(BTN_CROUCH)) {
+        menu_active = FALSE;
+        if(menu_needs_save) {
+            save_settings();
+            menu_needs_save = FALSE;
+        }
+        return;
+    }
+
+    // Navigate categories (D-PAD LEFT/RIGHT)
+    if(event_press(BTN_LEFT)) {
+        menu_category--;
+        if(menu_category < 0) menu_category = 4;
+        menu_item = 0;
+    }
+    if(event_press(BTN_RIGHT)) {
+        menu_category++;
+        if(menu_category > 4) menu_category = 0;
+        menu_item = 0;
+    }
+
+    // Navigate items (D-PAD UP/DOWN)
+    if(event_press(BTN_UP)) {
+        menu_item--;
+        if(menu_item < 0) menu_item = 7;
+    }
+    if(event_press(BTN_DOWN)) {
+        menu_item++;
+        if(menu_item > 7) menu_item = 0;
+    }
+
+    // Adjust values or toggle features
+    switch(menu_category) {
+        case 0: // Feature Toggles
+            if(event_press(BTN_JUMP)) {
+                feature_enabled[menu_item] = !feature_enabled[menu_item];
+                menu_needs_save = TRUE;
+            }
+            break;
+
+        case 1: // Activation Modes
+            if(event_press(BTN_JUMP)) {
+                activation_mode[menu_item]++;
+                if(activation_mode[menu_item] > 3) activation_mode[menu_item] = 0;
+                menu_needs_save = TRUE;
+            }
+            break;
+
+        case 2: // Primary Keys
+            if(event_press(BTN_JUMP)) {
+                key_primary[menu_item]++;
+                if(key_primary[menu_item] > 14) key_primary[menu_item] = 0;
+                menu_needs_save = TRUE;
+            }
+            break;
+
+        case 3: // Timing Values
+            if(get_val(BTN_UP) > 50) {
+                timing_delay[menu_item] += 10;
+                if(timing_delay[menu_item] > TIMING_MAX) timing_delay[menu_item] = TIMING_MAX;
+                menu_needs_save = TRUE;
+            }
+            if(get_val(BTN_DOWN) > 50) {
+                timing_delay[menu_item] -= 10;
+                if(timing_delay[menu_item] < TIMING_MIN) timing_delay[menu_item] = TIMING_MIN;
+                menu_needs_save = TRUE;
+            }
+            break;
+
+        case 4: // Advanced Settings
+            handle_advanced_menu();
+            break;
+    }
+
+    // Block all gameplay inputs while in menu
+    block_all_inputs();
+}
+
+function handle_advanced_menu() {
+    // Advanced settings: Anti-Recoil, Snaking, etc.
+    switch(menu_item) {
+        case 0: // Recoil Vertical
+            if(get_val(BTN_UP) > 50) {
+                recoil_vertical += 2;
+                if(recoil_vertical > 100) recoil_vertical = 100;
+                menu_needs_save = TRUE;
+            }
+            if(get_val(BTN_DOWN) > 50) {
+                recoil_vertical -= 2;
+                if(recoil_vertical < 0) recoil_vertical = 0;
+                menu_needs_save = TRUE;
+            }
+            break;
+
+        case 1: // Recoil Horizontal
+            if(get_val(BTN_UP) > 50) {
+                recoil_horizontal += 2;
+                if(recoil_horizontal > 50) recoil_horizontal = 50;
+                menu_needs_save = TRUE;
+            }
+            if(get_val(BTN_DOWN) > 50) {
+                recoil_horizontal -= 2;
+                if(recoil_horizontal < -50) recoil_horizontal = -50;
+                menu_needs_save = TRUE;
+            }
+            break;
+
+        case 2: // Slide Cancel Mode
+            if(event_press(BTN_JUMP)) {
+                slide_cancel_mode++;
+                if(slide_cancel_mode > 2) slide_cancel_mode = 0;
+                menu_needs_save = TRUE;
+            }
+            break;
+
+        case 3: // Snake Speed
+            if(get_val(BTN_UP) > 50) {
+                snake_speed++;
+                if(snake_speed > 15) snake_speed = 15;
+                menu_needs_save = TRUE;
+            }
+            if(get_val(BTN_DOWN) > 50) {
+                snake_speed--;
+                if(snake_speed < 5) snake_speed = 5;
+                menu_needs_save = TRUE;
+            }
+            break;
+    }
+}
+
+function block_all_inputs() {
+    set_val(BTN_FIRE, 0);
+    set_val(BTN_ADS, 0);
+    set_val(BTN_JUMP, 0);
+    set_val(BTN_RELOAD, 0);
+    set_val(BTN_SWAP, 0);
+    set_val(BTN_SPRINT, 0);
+    set_val(BTN_MELEE, 0);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PERSISTENT STORAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function save_settings() {
+    // Save feature toggles (pack into single value)
+    int packed_features = 0;
+    int i;
+    for(i = 0; i < 8; i++) {
+        if(feature_enabled[i]) {
+            packed_features |= (1 << i);
+        }
+    }
+    set_pvar(SPVAR_1, packed_features);
+
+    // Save other critical settings
+    set_pvar(SPVAR_2, recoil_vertical);
+    set_pvar(SPVAR_3, recoil_horizontal);
+    set_pvar(SPVAR_4, slide_cancel_mode);
+}
+
+function load_settings() {
+    // Load feature toggles
+    int packed_features = get_pvar(SPVAR_1, 0, 0, 255);
+    int i;
+    for(i = 0; i < 8; i++) {
+        feature_enabled[i] = (packed_features & (1 << i)) != 0;
+    }
+
+    // Load other settings
+    recoil_vertical = get_pvar(SPVAR_2, 0, 0, 100);
+    if(recoil_vertical == 0) recoil_vertical = 35; // Default
+
+    recoil_horizontal = get_pvar(SPVAR_3, 0, -50, 50);
+    slide_cancel_mode = get_pvar(SPVAR_4, 0, 0, 2);
+    if(slide_cancel_mode > 2) slide_cancel_mode = 1; // Default
+}
+
+function reset_to_defaults() {
+    // Reset all features to default
+    feature_enabled[FEAT_MOVEMENT_RESET] = FALSE;
+    feature_enabled[FEAT_ANTI_RECOIL] = TRUE;
+    feature_enabled[FEAT_SNAKING] = FALSE;
+    feature_enabled[FEAT_WALL_BOUNCE] = FALSE;
+    feature_enabled[FEAT_DROP_SHOT] = FALSE;
+    feature_enabled[FEAT_BUNNY_HOP] = FALSE;
+    feature_enabled[FEAT_WEAPON_SWAP] = FALSE;
+    feature_enabled[FEAT_AUTO_SPRINT] = FALSE;
+
+    recoil_vertical = 35;
+    recoil_horizontal = 0;
+    slide_cancel_mode = 1;
+
+    save_settings();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LED STATUS INDICATOR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function update_led_status() {
+    led_timer += get_rtime();
+
+    if(menu_active) {
+        // Blink white in menu
+        if(led_timer >= 500) {
+            led_state = !led_state;
+            led_set(LED_4, led_state ? 1 : 0);
+            led_timer = 0;
+        }
+    } else {
+        // Show active features count
+        int active_count = 0;
+        int i;
+        for(i = 0; i < 8; i++) {
+            if(feature_enabled[i] && feature_active[i]) active_count++;
+        }
+
+        if(active_count > 0) {
+            // Green = features active
+            led_set(LED_4, 2);
+        } else if(feature_enabled[FEAT_ANTI_RECOIL]) {
+            // Blue = ready (anti-recoil enabled)
+            led_set(LED_4, 3);
+        } else {
+            // Off = idle
+            led_set(LED_4, 0);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMBO SEQUENCES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+combo combo_slide_cancel_legacy {
+    set_val(BTN_CROUCH, 100);
+    wait(1);
+    set_val(BTN_CROUCH, 0);
+    wait(timing_delay[FEAT_MOVEMENT_RESET]);
+    set_val(BTN_CROUCH, 100);
+    wait(1);
+    set_val(BTN_JUMP, 100);
+    wait(1);
+}
+
+combo combo_slide_cancel_bo7 {
+    set_val(BTN_CROUCH, 100);
+    wait(1);
+    wait(timing_delay[FEAT_MOVEMENT_RESET]);
+    set_val(BTN_ADS, 100);
+    wait(1);
+    set_val(BTN_ADS, 0);
+    wait(1);
+    set_val(BTN_JUMP, 100);
+    wait(1);
+}
+
+combo combo_slide_cancel_jump {
+    set_val(BTN_CROUCH, 100);
+    wait(1);
+    set_val(BTN_CROUCH, 0);
+    wait(timing_delay[FEAT_MOVEMENT_RESET]);
+    set_val(BTN_JUMP, 100);
+    wait(1);
+}
+
+combo combo_drop_shot {
+    set_val(BTN_CROUCH, 100);
+    wait(timing_delay[FEAT_DROP_SHOT]);
+    set_val(BTN_CROUCH, 0);
+    drop_restand_pending = TRUE;
+}
+
+combo combo_bunny_hop {
+    set_val(BTN_JUMP, 100);
+    wait(1);
+    set_val(BTN_JUMP, 0);
+    wait(1);
+}
+
+combo combo_wall_bounce {
+    set_val(BTN_JUMP, 100);
+    wait(1);
+    wait(1);
+}
+
+combo combo_weapon_swap {
+    set_val(BTN_SWAP, 100);
+    wait(1);
+    set_val(BTN_SWAP, 0);
+    wait(timing_delay[FEAT_WEAPON_SWAP]);
+    set_val(BTN_SWAP, 100);
+    wait(1);
+    weapon_swap_active = FALSE;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function clamp(int value, int min_val, int max_val) {
+    if(value < min_val) return min_val;
+    if(value > max_val) return max_val;
+    return value;
+}
+
+/*
+    ═══════════════════════════════════════════════════════════════════════════════
+    END OF SCRIPT
+    ═══════════════════════════════════════════════════════════════════════════════
+
+    USAGE INSTRUCTIONS:
+
+    1. Load this script into Cronus Zen device
+    2. Hold LT + Press OPTIONS to open menu
+    3. Navigate with D-PAD, toggle with A, adjust with UP/DOWN
+    4. Press B to save and exit menu
+    5. Hold LT + LB + RB + Press VIEW to reset to defaults
+
+    LED INDICATORS:
+    - OFF (Black):      No features active
+    - BLUE:             Ready (Anti-recoil enabled)
+    - GREEN:            Features actively running
+    - WHITE (Blinking): Menu open
+
+    RECOMMENDED INITIAL SETTINGS:
+    - Enable Anti-Recoil (default ON)
+    - Enable Movement Reset for slide cancel
+    - Enable Drop Shot for instant prone
+    - Adjust timing values in menu to your preference
+
+    For competitive play:
+    - Keep vm_timing = 0 for lowest latency
+    - Adjust anti-recoil vertical (30-40 recommended)
+    - Use BO7 slide cancel mode (mode 1)
+    - Enable features one at a time to test responsiveness
+
+    ═══════════════════════════════════════════════════════════════════════════════
+*/
