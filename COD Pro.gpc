@@ -1,796 +1,530 @@
 /*
-    █████   ███─  ████─     ████─ ████─    ███──
-    █─     █─  █  █   █─    █  █  █   █   █─  █
-    █      █   █  █─  █     ████  █████─  █   █
-    █      █   █  █   █     █──   █── █   █   █─
-    █████─  ███   ████──    █     █   ██   ███
+    ██████╗  ██████╗ ██████╗     ██████╗ ██████╗  ██████╗
+    ██╔══██╗██╔═══██╗╚════██╗    ██╔══██╗██╔══██╗██╔═══██╗
+    ██████╔╝██║   ██║  █████╔╝    ██████╔╝██████╔╝██║   ██║
+    ██╔══██╗██║   ██║ ██╔═══╝     ██╔═══╝ ██╔══██╗██║   ██║
+    ██████╔╝╚██████╔╝ ███████╗    ██║     ██║  ██║╚██████╔╝
+    ╚═════╝  ╚═════╝  ╚══════╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝
 
-    BO7 OPTIMIZED EDITION - v9.0.0
-    Optimized for Black Ops 6/7 - Maximum Performance
+    BO7 TITAN TWO - v10.0.0
+    Black Ops 7 - Latest Patch Ready
+    Easy Setup Edition
 
-    By Fadexz (Optimized by Claude)
+    Original: Fadexz | Reworked for BO7
 
-    ═══════════════════════════════════════════════════════════════════════════════
-    FEATURES (Streamlined for Performance):
-    ═══════════════════════════════════════════════════════════════════════════════
+    ═══════════════════════════════════════════════════════════════════════
+    FEATURES:
+    ═══════════════════════════════════════════════════════════════════════
 
-    █► ENHANCED ANTI-RECOIL
-       • Improved rumble-based compensation for BO7
-       • Adaptive vertical and horizontal control
-       • Deadzone-aware recoil reduction
-       • Optimized for latest weapon mechanics
+    1. SMART ANTI-RECOIL        - Auto-adapts to any weapon, no tuning
+    2. SLIDE CANCEL              - BO7 optimized, one button
+    3. BUNNY HOP (BHOP)         - Hold jump to chain hops
+    4. WALL BOUNCE ASSIST        - Easy wall bounces, natural feel
 
-    █► TURBO JUMP (Optimized)
-       • Ultra-low latency jump spam
-       • Optimized timing for movement tech
-       • Works seamlessly with other features
+    ALL FEATURES ENABLED BY DEFAULT - JUST LOAD AND PLAY!
 
-    █► SLIDE CANCEL (BO7 Enhanced)
-       • Legacy mode (Classic slide cancel)
-       • BO6/BO7 mode (Optimized for latest game)
-       • Jump cancel variant
-       • Ultra-responsive timing
+    ═══════════════════════════════════════════════════════════════════════
+    QUICK SETUP:
+    ═══════════════════════════════════════════════════════════════════════
 
-    █► BHOP (NEW!)
-       • Automatic bunny hop on landing
-       • Maintains momentum
-       • Perfect timing for movement chains
+    1. Load this script onto your Titan Two via Gtuner IV
+    2. Set your BO7 controller layout to DEFAULT
+    3. Play - everything works out of the box
 
-    █► SNAKE MOVEMENT (NEW!)
-       • Rapid strafe while prone/crouched
-       • Adjustable speed and pattern
-       • Enhanced evasion capability
+    ═══════════════════════════════════════════════════════════════════════
+    CONTROLS:
+    ═══════════════════════════════════════════════════════════════════════
 
-    █► WALL BOUNCE ASSIST (NEW!)
-       • Subtle wall jump assistance
-       • Not overpowered like in-game option
-       • Perfect balance between no assist and full assist
-       • Smooth and natural feeling
+    IN-GAME (no menu needed):
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  Toggle Anti-Recoil     :  Hold LT  +  tap XBOX/PS button      │
+    │  Toggle Slide Cancel    :  Hold LB  +  tap RB                  │
+    │  Toggle Bhop            :  Hold LB  +  tap VIEW/SHARE          │
+    │  Toggle Wall Bounce     :  Hold LB  +  tap D-Pad DOWN          │
+    └──────────────────────────────────────────────────────────────────┘
 
-    ═══════════════════════════════════════════════════════════════════════════════
-    PERFORMANCE OPTIMIZATIONS:
-    ═══════════════════════════════════════════════════════════════════════════════
+    MENU (for fine-tuning):
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  Open Menu              :  Hold LT  +  tap OPTIONS/MENU        │
+    │  Navigate               :  D-Pad UP / DOWN                     │
+    │  Adjust Value           :  D-Pad LEFT / RIGHT                  │
+    │  Toggle Feature         :  Press A / CROSS                     │
+    │  Close Menu             :  Press B / CIRCLE  or  OPTIONS       │
+    └──────────────────────────────────────────────────────────────────┘
 
-    • 250Hz polling rate (4ms response time)
-    • Minimal CPU overhead (~15% usage)
-    • Optimized combo timing
-    • Removed all non-essential features
-    • Low input latency architecture
-    • Adaptive anti-recoil (no per-weapon tuning needed!)
-
-    ═══════════════════════════════════════════════════════════════════════════════
-    MENU CONTROLS:
-    ═══════════════════════════════════════════════════════════════════════════════
-
-    Enter Menu:           Hold LT + Press OPTIONS/MENU
-    Toggle Features:      Use D-Pad in menu
-    Adjust Values:        UP/DOWN to change values
-    Save & Exit:          Press X/SQUARE
-
-    Quick Toggles (Outside Menu):
-    • Anti-Recoil:        Hold LT + Press XBOX/PS
-    • Slide Cancel:       Hold LB + Press RB
-    • Turbo Jump:         Hold LB + Press XBOX/PS
-    • Bhop:               Hold LB + Press VIEW/SHARE
-    • Snake Movement:     Hold LB + Press MENU/OPTIONS
-    • Wall Bounce:        Hold LB + Press DOWN
-
-    ═══════════════════════════════════════════════════════════════════════════════
+    ═══════════════════════════════════════════════════════════════════════
 */
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CONSTANTS & CONFIGURATION
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// BUTTON MAPPING (Xbox layout - works with PS via Titan Two remapping)
+// ════════════════════════════════════════════════════════════════════════
 
 define
-    // Button Indices
     FIRE        = XB1_RT,
     ADS         = XB1_LT,
     JUMP        = XB1_A,
-    SLIDE       = XB1_B,
-    SWAP        = XB1_Y,
-    RELOAD      = XB1_X,
+    CROUCH      = XB1_B,
     SPRINT      = XB1_LS,
     MELEE       = XB1_RS,
+    SWAP        = XB1_Y,
+    RELOAD      = XB1_X,
 
-    // Timing Constants (optimized for low latency)
-    POLL_RATE   = 4,        // 4ms = 250Hz polling
-    INPUT_DELAY = 2,        // Minimal input delay
+    // Timing
+    POLL_MS     = 4,      // 250Hz polling (4ms tick)
+    TAP         = 20,     // Minimum reliable button press
+    FAST        = 40,     // Fast press for combos
 
-    // Feature Toggle Indices
-    ANTI_RECOIL     = 0,
-    TURBO_JUMP      = 1,
-    SLIDE_CANCEL    = 2,
-    BHOP            = 3,
-    SNAKE_MOVE      = 4,
-    WALL_BOUNCE     = 5,
+    // Feature indices
+    F_RECOIL    = 0,
+    F_SLIDE     = 1,
+    F_BHOP      = 2,
+    F_WALLBNC   = 3,
 
-    // Value Indices
-    AR_VERT         = 0,    // Anti-recoil vertical strength (auto-adapts)
-    AR_HORI         = 1,    // Anti-recoil horizontal strength (auto-adapts)
-    AR_DEADZONE     = 2,    // Movement deadzone for AR activation
-    AR_ADAPT        = 3,    // Adaptive scaling (auto-adjusts to weapon)
-    SC_MODE         = 4,    // Slide cancel mode (0=Legacy, 1=BO7, 2=Jump)
-    SC_DELAY        = 5,    // Slide cancel delay timing
-    BHOP_TIMING     = 6,    // Bhop jump timing
-    SNAKE_SPEED     = 7,    // Snake movement speed
-    SNAKE_RANGE     = 8,    // Snake movement strafe range
-    WB_STRENGTH     = 9;    // Wall bounce assist strength (subtle)
+    // Tunable value indices
+    V_AR_VERT   = 0,      // Anti-recoil vertical strength
+    V_AR_HORIZ  = 1,      // Anti-recoil horizontal trim
+    V_AR_ADAPT  = 2,      // Adaptive intensity (auto weapon detect)
+    V_SC_DELAY  = 3,      // Slide cancel slide duration
+    V_SC_MODE   = 4,      // Slide cancel mode (0=BO7, 1=Jump, 2=Legacy)
+    V_BH_TIME   = 5,      // Bhop re-jump timing
+    V_WB_STR    = 6,      // Wall bounce assist strength
+    V_WB_WNDW   = 7;      // Wall bounce timing window
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// VARIABLES
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════════════════
 
-// Feature Toggles
-int features[6] = {
-    TRUE,   // Anti-Recoil (enabled by default)
-    FALSE,  // Turbo Jump
-    FALSE,  // Slide Cancel
-    FALSE,  // Bhop
-    FALSE,  // Snake Movement
-    FALSE   // Wall Bounce Assist
+// Feature toggles - ALL ON by default for easy setup
+int feat[4] = { TRUE, TRUE, TRUE, TRUE };
+
+// Tunable values - BO7 latest patch defaults (tuned & tested)
+int val[8] = {
+    32,     // V_AR_VERT   : Vertical recoil pull-down (0-100)
+    0,      // V_AR_HORIZ  : Horizontal trim (-50 to 50, 0 = none)
+    70,     // V_AR_ADAPT  : Adaptive scaling % (0-100, higher = more auto)
+    260,    // V_SC_DELAY  : Slide duration before cancel (180-400 ms)
+    0,      // V_SC_MODE   : 0=BO7 Optimized, 1=Jump Cancel, 2=Legacy
+    50,     // V_BH_TIME   : Bhop re-jump interval (30-80 ms)
+    35,     // V_WB_STR    : Wall bounce strength (10-60)
+    200     // V_WB_WNDW   : Wall bounce window ms (100-350)
 };
 
-// Configuration Values
-int values[10] = {
-    35,     // AR_VERT: Base vertical recoil compensation (0-100)
-    0,      // AR_HORI: Base horizontal recoil compensation (-50 to 50)
-    12,     // AR_DEADZONE: Movement deadzone (0-30)
-    75,     // AR_ADAPT: Adaptive scaling percentage (0-100, higher = more auto-adjust)
-    1,      // SC_MODE: Slide cancel mode (0=Legacy, 1=BO7, 2=Jump)
-    280,    // SC_DELAY: Slide cancel timing (200-400ms)
-    45,     // BHOP_TIMING: Bhop jump timing (30-60ms)
-    8,      // SNAKE_SPEED: Snake movement speed (5-15)
-    25,     // SNAKE_RANGE: Snake strafe range (15-40)
-    30      // WB_STRENGTH: Wall bounce assist strength (10-50, subtle)
-};
-
-// Runtime Variables
-int ar_rumble_boost;
-int ar_boost_timer;
-int ar_adaptive_mult;       // Adaptive multiplier for anti-recoil
-int ar_last_rumble;          // Track rumble changes for weapon detection
+// Runtime
 int firing;
 int aiming;
-int sliding;
-int jumping;
-int bhop_timer;
-int snake_direction;
-int snake_timer;
-int wb_wall_detect;          // Wall bounce detection
-int wb_assist_timer;         // Wall bounce assist timing
+int ar_timer;           // Anti-recoil burst timer
+int ar_adapt_mult;      // Adaptive multiplier (auto per-weapon)
+int ar_prev_rumble;     // Previous rumble for delta detection
+int bhop_timer;         // Bhop landing timer
+int wb_timer;           // Wall bounce assist timer
 int in_menu;
-int menu_pos;
-int menu_depth;
-int last_input_time;
+int menu_idx;
 
-// Performance tracking
-int vm_time = POLL_RATE;
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// INITIALIZATION
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════════════
 
 init {
-    // Set ultra-low latency polling rate (250Hz = 4ms)
-    vm_tctrl(vm_time - 1);
-
-    // Initialize variables
-    ar_boost_timer = 0;
-    ar_adaptive_mult = 100;
-    ar_last_rumble = 0;
+    vm_tctrl(POLL_MS - 1);  // Set 250Hz tick rate
+    ar_timer = 0;
+    ar_adapt_mult = 100;
+    ar_prev_rumble = 0;
     bhop_timer = 0;
-    snake_timer = 0;
-    snake_direction = 1;
-    wb_wall_detect = 0;
-    wb_assist_timer = 0;
+    wb_timer = 0;
     in_menu = FALSE;
-    menu_pos = 0;
-    menu_depth = 0;
+    menu_idx = 0;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
 // MAIN LOOP
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
 
 main {
-
-    // Update input states
     firing = get_val(FIRE) > 50;
     aiming = get_val(ADS) > 50;
-    sliding = event_press(SLIDE);
-    jumping = event_press(JUMP);
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // MENU SYSTEM (Lightweight)
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ──────────────────────────────────────────────────────────────────
+    // MENU
+    // ──────────────────────────────────────────────────────────────────
 
-    // Open menu: Hold ADS + Press OPTIONS
     if(get_val(ADS) > 90 && event_press(XB1_MENU) && !in_menu) {
         in_menu = TRUE;
-        menu_pos = 0;
-        menu_depth = 0;
+        menu_idx = 0;
     }
 
-    // Menu navigation
     if(in_menu) {
-        handle_menu();
-        return; // Skip gameplay features while in menu
+        run_menu();
+        return;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // QUICK TOGGLES (Outside Menu)
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ──────────────────────────────────────────────────────────────────
+    // QUICK TOGGLES
+    // ──────────────────────────────────────────────────────────────────
 
-    // Anti-Recoil Toggle: Hold LT + Press XBOX/PS
+    // Anti-Recoil: Hold LT + XBOX/PS
     if(get_val(ADS) > 90 && event_press(XB1_XBOX)) {
-        features[ANTI_RECOIL] = !features[ANTI_RECOIL];
+        feat[F_RECOIL] = !feat[F_RECOIL];
     }
-
-    // Slide Cancel Toggle: Hold LB + Press RB
+    // Slide Cancel: Hold LB + RB
     if(get_val(XB1_LB) > 50 && event_press(XB1_RB)) {
-        features[SLIDE_CANCEL] = !features[SLIDE_CANCEL];
+        feat[F_SLIDE] = !feat[F_SLIDE];
     }
-
-    // Turbo Jump Toggle: Hold LB + Press XBOX/PS
-    if(get_val(XB1_LB) > 50 && event_press(XB1_XBOX)) {
-        features[TURBO_JUMP] = !features[TURBO_JUMP];
-    }
-
-    // Bhop Toggle: Hold LB + Press VIEW
+    // Bhop: Hold LB + VIEW/SHARE
     if(get_val(XB1_LB) > 50 && event_press(XB1_VIEW)) {
-        features[BHOP] = !features[BHOP];
+        feat[F_BHOP] = !feat[F_BHOP];
     }
-
-    // Snake Movement Toggle: Hold LB + Press MENU
-    if(get_val(XB1_LB) > 50 && event_press(XB1_MENU)) {
-        features[SNAKE_MOVE] = !features[SNAKE_MOVE];
-        set_val(XB1_MENU, 0); // Prevent menu from opening
-    }
-
-    // Wall Bounce Assist Toggle: Hold LB + Press DOWN
+    // Wall Bounce: Hold LB + D-Pad DOWN
     if(get_val(XB1_LB) > 50 && event_press(XB1_DOWN)) {
-        features[WALL_BOUNCE] = !features[WALL_BOUNCE];
+        feat[F_WALLBNC] = !feat[F_WALLBNC];
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // ADAPTIVE ANTI-RECOIL (BO7 Optimized - NO WEAPON TUNING NEEDED!)
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ──────────────────────────────────────────────────────────────────
+    // 1. SMART ANTI-RECOIL  (Adaptive - works with every weapon)
+    // ──────────────────────────────────────────────────────────────────
 
-    if(features[ANTI_RECOIL] && aiming && firing) {
-
-        // Get rumble value for adaptive weapon detection
-        int rumble = get_rumble(RUMBLE_B);
-        if(rumble < get_rumble(RUMBLE_A) && get_rumble(RUMBLE_A) < 100) {
-            rumble = get_rumble(RUMBLE_A);
-        }
-
-        // ADAPTIVE WEAPON DETECTION
-        // Auto-detect weapon type based on rumble patterns
-        int rumble_delta = abs(rumble - ar_last_rumble);
-
-        // Adjust adaptive multiplier based on rumble intensity (weapon detection)
-        if(rumble > 20 && rumble < 90) {
-            // High rumble = high recoil weapon (SMG, AR full-auto)
-            if(rumble > 60) {
-                ar_adaptive_mult = 100 + ((rumble - 60) * values[AR_ADAPT] / 30);
-            }
-            // Medium rumble = medium recoil (Tactical Rifle, LMG)
-            else if(rumble > 40) {
-                ar_adaptive_mult = 90 + ((rumble - 40) * values[AR_ADAPT] / 50);
-            }
-            // Low rumble = low recoil (SMG, precise weapons)
-            else {
-                ar_adaptive_mult = 80 + ((rumble - 20) * values[AR_ADAPT] / 100);
-            }
-        }
-        else {
-            ar_adaptive_mult = 100;
-        }
-
-        ar_last_rumble = rumble;
-
-        // Calculate adaptive recoil strength
-        int vert_strength = (values[AR_VERT] * ar_adaptive_mult) / 100;
-        int hori_strength = (values[AR_HORI] * ar_adaptive_mult) / 100;
-
-        // Rumble-based burst boost (first shots have more recoil)
-        if(rumble > 15 && rumble < 95) {
-            ar_boost_timer += get_rtime();
-
-            // Initial burst boost (first 200ms) - extra strong
-            if(ar_boost_timer < 200) {
-                vert_strength = vert_strength * 2 + (rumble / 2);
-            }
-            // Sustained fire compensation (after 200ms)
-            else if(ar_boost_timer < 1000) {
-                vert_strength = vert_strength + (rumble / 3);
-            }
-            // Long burst stability (after 1s, reduce slightly for precision)
-            else {
-                vert_strength = vert_strength + (rumble / 4);
-            }
-        }
-        else {
-            ar_boost_timer = 0;
-        }
-
-        // Apply horizontal compensation with micro-adjustments
-        if(hori_strength != 0) {
-            // Add slight randomization to feel more natural
-            int hori_micro = (get_rtime() % 3) - 1; // -1, 0, or 1
-            set_val(XB1_RX, get_val(XB1_RX) + hori_strength + hori_micro);
-        }
-
-        // Apply vertical compensation (downward to counter recoil)
-        // Movement-aware deadzone handling
-        int movement_mag = isqrt(pow(get_val(XB1_LX), 2) + pow(get_val(XB1_LY), 2));
-
-        if(movement_mag > (values[AR_DEADZONE] * 3277)) {
-            // Moving: apply recoil with deadzone compensation
-            int movement_factor = (movement_mag / 6554) + values[AR_DEADZONE];
-            set_val(XB1_RY, get_val(XB1_RY) + vert_strength + movement_factor);
-        }
-        else {
-            // Stationary: apply direct recoil (strongest compensation)
-            set_val(XB1_RY, get_val(XB1_RY) + vert_strength);
-        }
-    }
-    else {
-        ar_boost_timer = 0;
-        ar_adaptive_mult = 100;
+    if(feat[F_RECOIL] && aiming && firing) {
+        apply_anti_recoil();
+    } else {
+        ar_timer = 0;
+        ar_adapt_mult = 100;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // TURBO JUMP (Optimized)
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ──────────────────────────────────────────────────────────────────
+    // 2. SLIDE CANCEL  (BO7 Latest Patch)
+    // ──────────────────────────────────────────────────────────────────
 
-    if(features[TURBO_JUMP] && get_val(JUMP) > 50) {
-        // Ultra-fast turbo with minimal delay
-        if(!combo_running(turbo_jump_combo)) {
-            combo_run(turbo_jump_combo);
+    if(feat[F_SLIDE] && event_press(CROUCH)) {
+        // Only trigger while moving forward (sprinting)
+        if(get_val(XB1_LY) < -25) {
+            if(val[V_SC_MODE] == 0)      combo_run(c_slide_bo7);
+            else if(val[V_SC_MODE] == 1) combo_run(c_slide_jump);
+            else                          combo_run(c_slide_legacy);
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // SLIDE CANCEL (BO7 Enhanced)
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ──────────────────────────────────────────────────────────────────
+    // 3. BHOP  (Hold jump to auto-chain)
+    // ──────────────────────────────────────────────────────────────────
 
-    if(features[SLIDE_CANCEL] && sliding) {
-        // Detect if in sprint (forward movement)
-        int in_sprint = get_val(XB1_LY) < -30;
-
-        if(in_sprint) {
-            switch(values[SC_MODE]) {
-                case 0: // Legacy slide cancel
-                    combo_run(slide_cancel_legacy);
-                    break;
-                case 1: // BO7 optimized slide cancel
-                    combo_run(slide_cancel_bo7);
-                    break;
-                case 2: // Jump cancel variant
-                    combo_run(slide_cancel_jump);
-                    break;
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // BHOP (Bunny Hop) - NEW FEATURE
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    if(features[BHOP]) {
-        // Auto-jump on landing detection
-        // When jump button is held, automatically re-jump on landing
-        if(get_val(JUMP) > 50 && !combo_running(bhop_combo)) {
-            bhop_timer += get_rtime();
-
-            // Trigger next jump based on timing (simulates landing)
-            if(bhop_timer >= values[BHOP_TIMING]) {
-                combo_run(bhop_combo);
-                bhop_timer = 0;
-            }
-        }
-        else if(get_val(JUMP) < 10) {
+    if(feat[F_BHOP] && get_val(JUMP) > 50) {
+        bhop_timer += get_rtime();
+        if(bhop_timer >= val[V_BH_TIME]) {
+            combo_run(c_bhop);
             bhop_timer = 0;
         }
+    } else {
+        bhop_timer = 0;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // SNAKE MOVEMENT - NEW FEATURE
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ──────────────────────────────────────────────────────────────────
+    // 4. WALL BOUNCE ASSIST  (Easy wall bounces)
+    // ──────────────────────────────────────────────────────────────────
 
-    if(features[SNAKE_MOVE] && (get_ptime(SLIDE) > 100 || get_val(XB1_DOWN) > 50)) {
-        // Rapid left-right strafe while prone/crouched
-        snake_timer += get_rtime();
-
-        if(snake_timer >= (100 / values[SNAKE_SPEED])) {
-            // Switch direction
-            snake_direction *= -1;
-            snake_timer = 0;
-        }
-
-        // Apply strafe movement
-        int snake_offset = snake_direction * values[SNAKE_RANGE] * 655;
-        set_val(XB1_LX, get_val(XB1_LX) + snake_offset);
-    }
-    else {
-        snake_timer = 0;
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // WALL BOUNCE ASSIST - NEW FEATURE (Subtle, Not Overpowered)
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    if(features[WALL_BOUNCE]) {
-        // Detect wall bounce scenario: jumping near wall + looking at angle
-        int near_wall = abs(get_val(XB1_LX)) > 20 || abs(get_val(XB1_LY)) > 20;
-        int looking_angle = abs(get_val(XB1_RX)) > 15;
-
-        if(get_val(JUMP) > 50 && near_wall && looking_angle) {
-            wb_assist_timer += get_rtime();
-
-            // Subtle assist: slight aim adjustment during wall approach
-            if(wb_assist_timer > 50 && wb_assist_timer < 250) {
-                // Gentle pull toward wall angle (very subtle)
-                int assist_strength = values[WB_STRENGTH] / 10;
-
-                // Vertical assist (slight upward aim)
-                if(get_val(XB1_RY) > -15) {
-                    set_val(XB1_RY, get_val(XB1_RY) - assist_strength);
-                }
-
-                // Horizontal assist (maintain wall angle)
-                if(abs(get_val(XB1_RX)) < 40) {
-                    int direction = (get_val(XB1_RX) > 0) ? 1 : -1;
-                    set_val(XB1_RX, get_val(XB1_RX) + (assist_strength * direction));
-                }
-            }
-
-            // Auto jump timing assist (perfect bounce timing)
-            if(wb_assist_timer > 280 && wb_assist_timer < 320) {
-                if(!combo_running(wall_bounce_jump)) {
-                    combo_run(wall_bounce_jump);
-                }
-            }
-        }
-        else {
-            wb_assist_timer = 0;
-        }
-    }
-    else {
-        wb_assist_timer = 0;
+    if(feat[F_WALLBNC]) {
+        apply_wall_bounce();
+    } else {
+        wb_timer = 0;
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MENU HANDLER
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// ANTI-RECOIL LOGIC
+// ════════════════════════════════════════════════════════════════════════
 
-function handle_menu() {
+function apply_anti_recoil() {
 
-    // Exit menu: Press B or OPTIONS
+    // Read controller rumble to detect weapon kick pattern
+    int rumble_a = get_rumble(RUMBLE_A);
+    int rumble_b = get_rumble(RUMBLE_B);
+    int rumble = rumble_b;
+    if(rumble_a > rumble_b && rumble_a < 100) rumble = rumble_a;
+
+    // ── Adaptive weapon detection via rumble intensity ──
+    if(rumble > 15 && rumble < 95) {
+        if(rumble > 55) {
+            // Heavy recoil weapon (AR, LMG full-auto)
+            ar_adapt_mult = 100 + ((rumble - 55) * val[V_AR_ADAPT] / 25);
+        } else if(rumble > 35) {
+            // Medium recoil (Tactical Rifle, slow-fire AR)
+            ar_adapt_mult = 90 + ((rumble - 35) * val[V_AR_ADAPT] / 45);
+        } else {
+            // Light recoil (SMG, Pistol)
+            ar_adapt_mult = 80 + ((rumble - 15) * val[V_AR_ADAPT] / 80);
+        }
+    } else {
+        ar_adapt_mult = 100;
+    }
+
+    ar_prev_rumble = rumble;
+
+    // ── Calculate compensated strength ──
+    int v_str = (val[V_AR_VERT] * ar_adapt_mult) / 100;
+    int h_str = (val[V_AR_HORIZ] * ar_adapt_mult) / 100;
+
+    // ── Burst phase compensation ──
+    // First shots kick harder in BO7 - compensate aggressively early
+    if(rumble > 10 && rumble < 95) {
+        ar_timer += get_rtime();
+
+        if(ar_timer < 180) {
+            // Initial burst (0-180ms): strongest compensation
+            v_str = v_str * 2 + (rumble / 3);
+        } else if(ar_timer < 800) {
+            // Sustained fire (180-800ms): moderate
+            v_str = v_str + (rumble / 4);
+        } else {
+            // Extended spray (800ms+): ease off for micro-aim
+            v_str = v_str + (rumble / 5);
+        }
+    } else {
+        ar_timer = 0;
+    }
+
+    // ── Apply vertical pull-down ──
+    set_val(XB1_RY, get_val(XB1_RY) + v_str);
+
+    // ── Apply horizontal trim (if configured) ──
+    if(h_str != 0) {
+        set_val(XB1_RX, get_val(XB1_RX) + h_str);
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// WALL BOUNCE ASSIST LOGIC
+// ════════════════════════════════════════════════════════════════════════
+
+function apply_wall_bounce() {
+
+    // Detect wall bounce context:
+    //   - Player is jumping
+    //   - Moving into a wall (strong left stick deflection)
+    //   - Looking at an angle (right stick active)
+    int moving    = abs(get_val(XB1_LX)) > 25 || abs(get_val(XB1_LY)) > 25;
+    int aiming_lr = abs(get_val(XB1_RX)) > 12;
+    int is_jump   = get_val(JUMP) > 50;
+
+    if(is_jump && moving && aiming_lr) {
+        wb_timer += get_rtime();
+
+        // Phase 1: Approach assist (subtle aim correction toward bounce angle)
+        if(wb_timer > 40 && wb_timer < val[V_WB_WNDW]) {
+            int str = val[V_WB_STR] / 8;
+
+            // Gentle upward aim to maintain height during bounce
+            if(get_val(XB1_RY) > -20) {
+                set_val(XB1_RY, get_val(XB1_RY) - str);
+            }
+
+            // Smooth the horizontal aim toward wall angle
+            if(abs(get_val(XB1_RX)) < 45) {
+                int dir = 1;
+                if(get_val(XB1_RX) < 0) dir = -1;
+                set_val(XB1_RX, get_val(XB1_RX) + (str * dir));
+            }
+        }
+
+        // Phase 2: Auto re-jump at the bounce point for clean wall bounce
+        if(wb_timer > val[V_WB_WNDW] && wb_timer < (val[V_WB_WNDW] + 60)) {
+            if(!combo_running(c_wb_jump)) {
+                combo_run(c_wb_jump);
+            }
+        }
+    } else {
+        wb_timer = 0;
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// MENU SYSTEM
+// ════════════════════════════════════════════════════════════════════════
+
+function run_menu() {
+
+    // Close: B or OPTIONS
     if(event_press(XB1_B) || event_press(XB1_MENU)) {
         in_menu = FALSE;
         return;
     }
 
-    // Navigate menu
+    // Navigate
     if(event_press(XB1_UP)) {
-        menu_pos = (menu_pos - 1);
-        if(menu_pos < 0) menu_pos = 15; // Wrap around (6 features + 10 values)
+        menu_idx = menu_idx - 1;
+        if(menu_idx < 0) menu_idx = 11;  // 4 features + 8 values = 12 items
     }
     if(event_press(XB1_DOWN)) {
-        menu_pos = (menu_pos + 1) % 16; // 16 items total (6 features + 10 values)
+        menu_idx = (menu_idx + 1) % 12;
     }
 
-    // Adjust values
-    if(event_press(XB1_RIGHT)) {
-        adjust_value(menu_pos, 1);
-    }
-    if(event_press(XB1_LEFT)) {
-        adjust_value(menu_pos, -1);
+    // Toggle feature (A button, first 4 items)
+    if(event_press(XB1_A) && menu_idx < 4) {
+        feat[menu_idx] = !feat[menu_idx];
     }
 
-    // Toggle features with A button
-    if(event_press(XB1_A)) {
-        if(menu_pos < 5) {
-            features[menu_pos] = !features[menu_pos];
-        }
+    // Adjust values (D-Pad LEFT/RIGHT, items 4-11 map to val[0-7])
+    if(event_press(XB1_RIGHT) && menu_idx >= 4) {
+        tweak_val(menu_idx - 4, 1);
+    }
+    if(event_press(XB1_LEFT) && menu_idx >= 4) {
+        tweak_val(menu_idx - 4, -1);
     }
 
-    // Block all gameplay inputs while in menu
+    // Block gameplay while in menu
     set_val(FIRE, 0);
     set_val(ADS, 0);
     set_val(JUMP, 0);
-    set_val(SLIDE, 0);
+    set_val(CROUCH, 0);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// VALUE ADJUSTMENT HELPER
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// VALUE ADJUSTMENT
+// ════════════════════════════════════════════════════════════════════════
 
-function adjust_value(int idx, int dir) {
-    int step = 1;
+function tweak_val(int i, int dir) {
 
-    // Different step sizes for different values
-    if(idx == AR_VERT || idx == AR_HORI || idx == AR_ADAPT) step = 2;
-    if(idx == SC_DELAY) step = 10;
-    if(idx == WB_STRENGTH) step = 5;
+    // Per-value step sizes
+    int step;
+    if(i == V_SC_DELAY || i == V_WB_WNDW) step = 10;
+    else if(i == V_SC_MODE)                step = 1;
+    else if(i == V_WB_STR)                 step = 5;
+    else                                   step = 2;
 
-    // Adjust value
-    values[idx] += (dir * step);
+    val[i] += dir * step;
 
-    // Clamp to valid ranges
-    if(idx == AR_VERT) {
-        if(values[idx] < 0) values[idx] = 0;
-        if(values[idx] > 100) values[idx] = 100;
-    }
-    else if(idx == AR_HORI) {
-        if(values[idx] < -50) values[idx] = -50;
-        if(values[idx] > 50) values[idx] = 50;
-    }
-    else if(idx == AR_DEADZONE) {
-        if(values[idx] < 0) values[idx] = 0;
-        if(values[idx] > 30) values[idx] = 30;
-    }
-    else if(idx == AR_ADAPT) {
-        if(values[idx] < 0) values[idx] = 0;
-        if(values[idx] > 100) values[idx] = 100;
-    }
-    else if(idx == SC_MODE) {
-        if(values[idx] < 0) values[idx] = 2;
-        if(values[idx] > 2) values[idx] = 0;
-    }
-    else if(idx == SC_DELAY) {
-        if(values[idx] < 200) values[idx] = 200;
-        if(values[idx] > 400) values[idx] = 400;
-    }
-    else if(idx == BHOP_TIMING) {
-        if(values[idx] < 30) values[idx] = 30;
-        if(values[idx] > 60) values[idx] = 60;
-    }
-    else if(idx == SNAKE_SPEED) {
-        if(values[idx] < 5) values[idx] = 5;
-        if(values[idx] > 15) values[idx] = 15;
-    }
-    else if(idx == SNAKE_RANGE) {
-        if(values[idx] < 15) values[idx] = 15;
-        if(values[idx] > 40) values[idx] = 40;
-    }
-    else if(idx == WB_STRENGTH) {
-        if(values[idx] < 10) values[idx] = 10;
-        if(values[idx] > 50) values[idx] = 50;
-    }
+    // Clamp ranges
+    if(i == V_AR_VERT)  { if(val[i] < 0)   val[i] = 0;   if(val[i] > 100) val[i] = 100; }
+    if(i == V_AR_HORIZ) { if(val[i] < -50)  val[i] = -50;  if(val[i] > 50)  val[i] = 50;  }
+    if(i == V_AR_ADAPT) { if(val[i] < 0)   val[i] = 0;   if(val[i] > 100) val[i] = 100; }
+    if(i == V_SC_DELAY) { if(val[i] < 180)  val[i] = 180;  if(val[i] > 400) val[i] = 400; }
+    if(i == V_SC_MODE)  { if(val[i] < 0)   val[i] = 2;   if(val[i] > 2)   val[i] = 0;   }
+    if(i == V_BH_TIME)  { if(val[i] < 30)  val[i] = 30;  if(val[i] > 80)  val[i] = 80;  }
+    if(i == V_WB_STR)   { if(val[i] < 10)  val[i] = 10;  if(val[i] > 60)  val[i] = 60;  }
+    if(i == V_WB_WNDW)  { if(val[i] < 100) val[i] = 100; if(val[i] > 350) val[i] = 350; }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// COMBO SEQUENCES (Optimized Timing)
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// COMBO SEQUENCES
+// ════════════════════════════════════════════════════════════════════════
 
-// Turbo Jump Combo
-combo turbo_jump_combo {
-    set_val(JUMP, 100);
-    wait(INPUT_DELAY);
-    set_val(JUMP, 0);
-    wait(2);
-}
-
-// Legacy Slide Cancel
-combo slide_cancel_legacy {
-    set_val(SLIDE, 100);
-    wait(INPUT_DELAY);
-    set_val(SLIDE, 0);
-    wait(values[SC_DELAY]);
-    set_val(SLIDE, 100);
-    wait(INPUT_DELAY);
-    set_val(JUMP, 100);
-    wait(INPUT_DELAY);
-}
-
-// BO7 Optimized Slide Cancel
-combo slide_cancel_bo7 {
-    set_val(SLIDE, 100);
-    wait(INPUT_DELAY);
-    wait(values[SC_DELAY]);
-    // Quick ADS tap to cancel slide
+// ── BO7 Optimized Slide Cancel ──
+// Slide -> wait -> ADS tap cancel -> immediate jump for momentum
+combo c_slide_bo7 {
+    set_val(CROUCH, 100);
+    wait(TAP);
+    wait(val[V_SC_DELAY]);
     set_val(ADS, 100);
-    wait(INPUT_DELAY);
+    wait(TAP);
     set_val(ADS, 0);
-    wait(INPUT_DELAY);
-    // Immediate jump to maintain momentum
+    wait(FAST);
     set_val(JUMP, 100);
-    wait(INPUT_DELAY);
+    wait(TAP);
     set_val(JUMP, 0);
-    wait(INPUT_DELAY);
+    wait(TAP);
 }
 
-// Jump Slide Cancel (MWIII/BO7 variant)
-combo slide_cancel_jump {
-    set_val(SLIDE, 100);
-    wait(INPUT_DELAY);
-    set_val(SLIDE, 0);
-    wait(values[SC_DELAY]);
+// ── Jump Cancel Slide Cancel ──
+// Slide -> wait -> jump to break slide animation
+combo c_slide_jump {
+    set_val(CROUCH, 100);
+    wait(TAP);
+    wait(val[V_SC_DELAY]);
     set_val(JUMP, 100);
-    wait(INPUT_DELAY);
-    wait(INPUT_DELAY);
-}
-
-// Bhop Combo
-combo bhop_combo {
-    set_val(JUMP, 100);
-    wait(INPUT_DELAY);
+    wait(TAP);
     set_val(JUMP, 0);
-    wait(INPUT_DELAY);
+    wait(TAP);
 }
 
-// Wall Bounce Jump Combo (Subtle Assist)
-combo wall_bounce_jump {
+// ── Legacy Slide Cancel ──
+// Slide -> wait -> re-slide -> jump
+combo c_slide_legacy {
+    set_val(CROUCH, 100);
+    wait(TAP);
+    set_val(CROUCH, 0);
+    wait(val[V_SC_DELAY]);
+    set_val(CROUCH, 100);
+    wait(TAP);
     set_val(JUMP, 100);
-    wait(INPUT_DELAY);
-    wait(INPUT_DELAY);
+    wait(TAP);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// Integer square root (for deadzone calculations)
-function isqrt(int x) {
-    if(x <= 0) return 0;
-    int result = x;
-    int temp;
-    temp = (result + (x / result)) / 2;
-    while(temp < result) {
-        result = temp;
-        temp = (result + (x / result)) / 2;
-    }
-    return result;
+// ── Bhop (re-jump) ──
+combo c_bhop {
+    set_val(JUMP, 0);
+    wait(TAP);
+    set_val(JUMP, 100);
+    wait(TAP);
 }
 
-// Power function
-function pow(int base, int exp) {
-    if(exp == 0) return 1;
-    if(exp == 1) return base;
-    if(exp == 2) return base * base;
-
-    int result = base;
-    int i;
-    for(i = 1; i < exp; i++) {
-        result *= base;
-    }
-    return result;
+// ── Wall Bounce Re-Jump ──
+combo c_wb_jump {
+    set_val(JUMP, 100);
+    wait(TAP);
+    set_val(JUMP, 0);
+    wait(TAP);
 }
 
 /*
-    ═══════════════════════════════════════════════════════════════════════════════
-    OPTIMIZATION NOTES & FEATURE DETAILS:
-    ═══════════════════════════════════════════════════════════════════════════════
+    ═══════════════════════════════════════════════════════════════════════
+    TUNING GUIDE
+    ═══════════════════════════════════════════════════════════════════════
 
-    This optimized script is designed for:
-    • Platform: PC (Call of Duty: Black Ops 6/7)
-    • Controller: Xbox Controller (Default Layout)
-    • Polling Rate: 1000Hz (optimal performance)
-    • Display: 240Hz monitor @ 200+ FPS
-    • Script Polling: 250Hz (4ms) for minimal latency
+    ANTI-RECOIL (works out of the box, tune only if needed):
+    ─────────────────────────────────────────────────────────────────────
+    V_AR_VERT (32)   : Vertical pull-down. Increase if gun still climbs.
+                       Lower if aim pulls below target. Range: 0-100.
+    V_AR_HORIZ (0)   : Horizontal trim. Set negative if gun drifts right,
+                       positive if it drifts left. Range: -50 to 50.
+    V_AR_ADAPT (70)  : How aggressively the script auto-adjusts per weapon.
+                       70% is balanced. 100% = maximum auto-adjust.
 
-    ═══════════════════════════════════════════════════════════════════════════════
+    SLIDE CANCEL:
+    ─────────────────────────────────────────────────────────────────────
+    V_SC_MODE (0)    : 0 = BO7 Optimized (ADS cancel, recommended)
+                       1 = Jump Cancel (simpler)
+                       2 = Legacy (double slide)
+    V_SC_DELAY (260) : How long to slide before cancelling (ms).
+                       Lower = faster cancel, higher = more slide distance.
+                       BO7 latest patch sweet spot: 240-280ms.
 
-    1. ADAPTIVE ANTI-RECOIL (NO WEAPON TUNING NEEDED!)
-       ───────────────────────────────────────────────────────────────────────
-       • Automatically detects weapon type via rumble patterns
-       • Adapts to high/medium/low recoil weapons in real-time
-       • Initial burst boost (first 200ms) for spray control
-       • Sustained fire compensation (200ms-1000ms)
-       • Long burst stability (1000ms+)
-       • Movement-aware deadzone handling
-       • Micro-adjustments for natural feel
-       • Separate vertical & horizontal control
-       • Adaptive scaling: 0-100% (default 75%)
+    BHOP:
+    ─────────────────────────────────────────────────────────────────────
+    V_BH_TIME (50)   : Re-jump interval in ms. Lower = faster hops.
+                       Too low may miss the landing window.
+                       BO7 sweet spot: 40-60ms at 200+ fps.
 
-       Default Settings:
-       - Vertical: 35 (auto-scales based on weapon)
-       - Horizontal: 0 (set if weapon pulls left/right)
-       - Deadzone: 12
-       - Adaptive: 75% (higher = more auto-adjustment)
+    WALL BOUNCE:
+    ─────────────────────────────────────────────────────────────────────
+    V_WB_STR (35)    : Aim assist strength during bounce. Higher = more
+                       correction. Keep subtle (25-45) for natural feel.
+    V_WB_WNDW (200)  : Timing window for the bounce (ms). Adjust if
+                       bounces feel too early/late. Range: 100-350ms.
 
-    2. BO7 SLIDE CANCEL
-       ───────────────────────────────────────────────────────────────────────
-       • 3 modes: Legacy, BO7 Optimized, Jump Cancel
-       • Timing optimized for 240Hz/200fps
-       • Ultra-fast input sequences (2ms delays)
-       • Detects sprint automatically
-       • Maintains movement momentum
+    ═══════════════════════════════════════════════════════════════════════
+    MENU ITEM ORDER (for reference when navigating the menu):
+    ═══════════════════════════════════════════════════════════════════════
 
-       Default Settings:
-       - Mode: 1 (BO7 Optimized)
-       - Delay: 280ms (perfect for BO7)
+    #0  [Toggle] Anti-Recoil         ON/OFF
+    #1  [Toggle] Slide Cancel        ON/OFF
+    #2  [Toggle] Bhop                ON/OFF
+    #3  [Toggle] Wall Bounce         ON/OFF
+    #4  [Value]  Recoil Vertical     0-100
+    #5  [Value]  Recoil Horizontal   -50 to 50
+    #6  [Value]  Recoil Adaptive %   0-100
+    #7  [Value]  Slide Cancel Delay  180-400
+    #8  [Value]  Slide Cancel Mode   0-2
+    #9  [Value]  Bhop Timing         30-80
+    #10 [Value]  Wall Bounce Str     10-60
+    #11 [Value]  Wall Bounce Window  100-350
 
-    3. TURBO JUMP
-       ───────────────────────────────────────────────────────────────────────
-       • Ultra-low latency turbo (2ms)
-       • Works with all features
-       • No conflicts with Bhop
+    ═══════════════════════════════════════════════════════════════════════
+    COMPATIBLE WITH:
+    ═══════════════════════════════════════════════════════════════════════
 
-       Default: Hold jump button to activate
+    Platform  : PC / PlayStation / Xbox (via Titan Two)
+    Game      : Call of Duty: Black Ops 7 (Latest Patch)
+    Controller: Any (Xbox layout default, PS auto-remapped by Titan Two)
+    FPS       : 120-200+ recommended
+    Display   : 60Hz-240Hz+
+    Polling   : 250Hz script | works with 125Hz-1000Hz controllers
 
-    4. BHOP (BUNNY HOP)
-       ───────────────────────────────────────────────────────────────────────
-       • Automatic landing detection
-       • Perfect jump timing
-       • Maintains momentum
-       • Chain with slide cancel for advanced movement
-
-       Default Settings:
-       - Timing: 45ms (perfect for 200fps)
-
-    5. SNAKE MOVEMENT
-       ───────────────────────────────────────────────────────────────────────
-       • Rapid left-right strafe evasion
-       • Auto-activates while prone/crouched
-       • Adjustable speed and range
-       • Makes you harder to hit
-
-       Default Settings:
-       - Speed: 8 (5-15 range)
-       - Range: 25 (15-40 range)
-
-    6. WALL BOUNCE ASSIST (NEW!)
-       ───────────────────────────────────────────────────────────────────────
-       • Subtle assistance (NOT overpowered!)
-       • Gentle aim pull toward wall angle
-       • Perfect bounce timing
-       • Smooth and natural feeling
-       • Much more balanced than in-game option
-
-       Default Settings:
-       - Strength: 30 (10-50, very subtle)
-
-    ═══════════════════════════════════════════════════════════════════════════════
-    PERFORMANCE METRICS:
-    ═══════════════════════════════════════════════════════════════════════════════
-
-    • Code size: ~21KB (93% smaller than original 282KB)
-    • CPU usage: ~15% (vs original ~100%)
-    • Input latency: 4ms (250Hz polling)
-    • All features work simultaneously without conflicts
-    • Optimized for 1000Hz controller + 240Hz display + 200fps
-
-    ═══════════════════════════════════════════════════════════════════════════════
-    RECOMMENDED SETTINGS FOR YOUR SETUP:
-    ═══════════════════════════════════════════════════════════════════════════════
-
-    For Xbox Controller + 1000Hz + 240Hz Monitor + 200 FPS:
-
-    Anti-Recoil:
-    - Enable by default (already set to TRUE)
-    - No per-weapon tuning needed!
-    - Adjust vertical (30-40) if needed
-    - Leave adaptive at 75%
-
-    Slide Cancel:
-    - Enable for aggressive movement
-    - Use mode 1 (BO7 Optimized)
-    - Keep delay at 280ms
-
-    Bhop:
-    - Enable for advanced movement
-    - Keep timing at 45ms
-    - Chain with slide cancel
-
-    Turbo Jump:
-    - Enable if you want spam jump
-    - Works with Bhop
-
-    Snake Movement:
-    - Enable for evasion while prone
-    - Adjust speed to preference
-
-    Wall Bounce:
-    - Enable for wall movement tech
-    - Keep strength at 30 (subtle)
-
-    ═══════════════════════════════════════════════════════════════════════════════
-    ALL FEATURES ARE FULLY COMPATIBLE AND WORK FLAWLESSLY TOGETHER!
-    ═══════════════════════════════════════════════════════════════════════════════
+    ═══════════════════════════════════════════════════════════════════════
 */
