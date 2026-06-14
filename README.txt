@@ -1,119 +1,141 @@
 COD Pro - BO7 Titan Two Script
 ================================
-v10.2.0 | Easy Setup Edition | Latest Patch Ready
+v11.0.0 | Ultra Responsive Edition | Latest Patch
 
-Original script by Fadexz | Reworked for Black Ops 7
-https://discord.com/users/291872132898619392 (fadexz)
-https://www.buymeacoffee.com/Fadexz
+Original by Fadexz | Reworked for BO7
 
 
-QUICK SETUP (3 steps)
-=====================
-1. Open Gtuner IV on your PC
-2. Load "COD Pro.gpc" onto your Titan Two (Device > Program)
-3. Play BO7 - all features are ON by default, nothing to configure
-
-Settings are saved automatically and persist between sessions.
+QUICK SETUP
+===========
+1. Load "COD Pro.gpc" onto Titan Two via Gtuner IV
+2. Play - all features ON, presets ready
 
 
-FEATURES
-========
-All 4 features are ENABLED out of the box:
+NEW IN v11.0.0
+==============
 
-  SMART ANTI-RECOIL
-    Auto-detects your weapon via rumble and adjusts compensation.
-    No per-weapon tuning needed. Just aim + shoot.
+SMART ANTI-RECOIL (Pattern Learning)
+  The script now tracks rumble patterns across frames and "learns"
+  your weapon's recoil behavior. Consistent patterns get boosted,
+  erratic patterns get reduced. No manual tuning needed.
 
-  SLIDE CANCEL (BO7 Optimized)
-    Press crouch while sprinting and the script handles the cancel.
-    3 modes: BO7 ADS cancel (default), Jump cancel, Legacy.
+WEAPON PRESETS (Hold LT + D-Pad)
+  Quick switch between optimized profiles:
+  • D-Pad UP    = AR (balanced: 32 vert, 75% adapt)
+  • D-Pad RIGHT = SMG (light: 22 vert, 60% adapt)
+  • D-Pad DOWN  = LMG (heavy: 45 vert, 85% adapt)
+  • D-Pad LEFT  = Custom (your current settings)
 
-  BUNNY HOP (BHOP)
-    Hold jump to auto-chain hops. Maintains momentum.
+1MS ULTRA RESPONSE MODE
+  Enable in Settings menu for 1000Hz polling.
+  Maximum responsiveness for competitive play.
 
-  SNAKE MOVEMENT
-    Rapid left-right strafe while prone or holding D-pad down.
-    Makes you harder to hit. Adjustable speed and range.
+OLED MENU DISPLAY
+  Visual menu on Titan Two screen with organized pages:
+  • Main Menu -> Anti-Recoil / Movement / Settings
+  • Real-time value display
+  • Feature status overview
+
+
+FEATURES (ALL ON BY DEFAULT)
+============================
+1. Smart Anti-Recoil  - Adaptive + pattern learning
+2. Slide Cancel       - BO7 optimized (3 modes)
+3. Bunny Hop          - Frame-perfect chaining
+4. Snake Movement     - Evasive rapid strafe
 
 
 CONTROLS
 ========
-Toggle features on/off (LED flashes to confirm):
 
-  Anti-Recoil     :  Hold LT  + tap XBOX/PS button
-  Slide Cancel    :  Hold LB  + tap RB
-  Bhop            :  Hold LB  + tap VIEW/SHARE
-  Snake Movement  :  Hold LB  + tap OPTIONS/MENU
+QUICK TOGGLES:
+  Anti-Recoil    : Hold LT + tap XBOX/PS
+  Slide Cancel   : Hold LB + tap RB
+  Bhop           : Hold LB + tap VIEW/SHARE
+  Snake          : Hold LB + tap OPTIONS/MENU
 
-LED feedback:
-  GREEN flash  = Feature turned ON
-  RED flash    = Feature turned OFF
+WEAPON PRESETS (Hold LT + D-Pad):
+  D-Pad UP       : AR Profile
+  D-Pad RIGHT    : SMG Profile
+  D-Pad DOWN     : LMG Profile
+  D-Pad LEFT     : Custom Profile
 
-
-MENU (Fine-Tuning)
-==================
-  Open            :  Hold LT  + tap OPTIONS/MENU
-  Navigate        :  D-Pad UP / DOWN
-  Adjust Value    :  D-Pad LEFT / RIGHT
-  Toggle Feature  :  Press A / CROSS
-  Close & Save    :  Press B / CIRCLE  or  OPTIONS
-
-LED in menu mode is BLUE. Changes save automatically.
+MENU:
+  Open           : Hold LT + tap MENU (no LB held)
+  Navigate       : D-Pad UP/DOWN
+  Adjust         : D-Pad LEFT/RIGHT
+  Select/Toggle  : A / CROSS
+  Back/Close     : B / CIRCLE
 
 
-MENU ITEMS
-==========
-#0  [Toggle] Anti-Recoil          ON/OFF
-#1  [Toggle] Slide Cancel         ON/OFF
-#2  [Toggle] Bhop                 ON/OFF
-#3  [Toggle] Snake Movement       ON/OFF
-──────────────────────────────────────────────────
-#4  [Value]  Recoil Vertical      0-100      (default 32)
-#5  [Value]  Recoil Horizontal    -50 to 50  (default 0)
-#6  [Value]  Recoil Adaptive %    0-100      (default 70)
-#7  [Value]  Slide Cancel Delay   180-400ms  (default 260)
-#8  [Value]  Slide Cancel Mode    0-2        (default 0)
-#9  [Value]  Bhop Timing          30-80ms    (default 50)
-#10 [Value]  Snake Speed          5-20       (default 10)
-#11 [Value]  Snake Range          15-50      (default 30)
+MENU STRUCTURE
+==============
 
+MAIN MENU
+  > Anti-Recoil
+  > Movement
+  > Settings
+  > Exit
 
-IF SOMETHING FEELS OFF
-======================
-Anti-recoil too strong?   -> Lower Recoil Vertical (#4)
-Anti-recoil too weak?     -> Raise Recoil Vertical (#4)
-Gun drifts sideways?      -> Adjust Recoil Horizontal (#5)
-Slide cancel too slow?    -> Lower Slide Cancel Delay (#7)
-Bhop missing jumps?       -> Raise Bhop Timing (#9)
-Snake too fast/slow?      -> Adjust Snake Speed (#10)
-Snake strafe too wide?    -> Lower Snake Range (#11)
+ANTI-RECOIL PAGE
+  Enable         [ON/OFF]
+  Vertical       0-100    (default 32)
+  Horizontal     -50 to 50 (default 0)
+  Adaptive       0-100    (default 75)
+  < Back
+
+MOVEMENT PAGE
+  Slide          [ON/OFF]
+  Bhop           [ON/OFF]
+  Snake          [ON/OFF]
+  SC Delay       150-400ms (default 240)
+  SC Mode        0-2       (default 0)
+  BH Time        30-80ms   (default 45)
+  < Back
+
+SETTINGS PAGE
+  SN Speed       5-25      (default 12)
+  SN Range       15-60     (default 35)
+  Preset         AR/SMG/LMG/CUST
+  1ms Mode       [ON/OFF]
+  < Back
 
 
 SLIDE CANCEL MODES
 ==================
-Mode 0 (default): BO7 ADS Cancel - Slide, ADS tap, jump. Best for BO7.
-Mode 1: Jump Cancel - Slide then jump. Simpler but less momentum.
-Mode 2: Legacy - Double slide then jump. Old-school style.
+Mode 0: BO7 ADS Cancel (default) - Slide, ADS tap, jump
+Mode 1: Jump Cancel - Slide, jump
+Mode 2: Legacy - Double slide, jump
 
 
 LED INDICATORS
 ==============
-WHITE (steady)  : Normal gameplay
-BLUE (steady)   : Menu mode active
-GREEN (flash)   : Feature ON / value increased
-RED (flash)     : Feature OFF
+WHITE   : Normal gameplay
+BLUE    : Menu navigation
+GREEN   : Feature ON / value up / preset switch
+RED     : Feature OFF
+
+
+ABOUT AI FEATURES
+=================
+The "pattern learning" anti-recoil is a standalone simulation.
+For true AI aim assist (like PhantomCV), you need:
+  - PC running Python + capture software
+  - GCV (Game Capture Video) connection
+  - Trained model (YOLOv5 etc.)
+
+This script works 100% standalone on the Titan Two.
 
 
 COMPATIBILITY
 =============
 Platform   : PC / PlayStation / Xbox (via Titan Two)
 Game       : Call of Duty: Black Ops 7 (Latest Patch)
-Controller : Any (Xbox layout default, PS auto-remapped)
-FPS        : 120-200+ recommended
-Display    : 60Hz-240Hz+
-Polling    : 250Hz script, works with 125Hz-1000Hz controllers
+Controller : Any (Xbox default, PS auto-remapped)
+Display    : Titan Two OLED supported
+Polling    : 250Hz default / 1000Hz ultra mode
 
 
 LICENSE
 =======
-GNU General Public License v3 - see LICENSE file
+GNU General Public License v3
