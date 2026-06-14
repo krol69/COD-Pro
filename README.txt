@@ -1,6 +1,6 @@
 COD Pro - BO7 Titan Two Script
 ================================
-v10.1.0 | Easy Setup Edition | Latest Patch Ready
+v10.2.0 | Easy Setup Edition | Latest Patch Ready
 
 Original script by Fadexz | Reworked for Black Ops 7
 https://discord.com/users/291872132898619392 (fadexz)
@@ -18,7 +18,7 @@ Settings are saved automatically and persist between sessions.
 
 FEATURES
 ========
-All 5 features are ENABLED out of the box:
+All 4 features are ENABLED out of the box:
 
   SMART ANTI-RECOIL
     Auto-detects your weapon via rumble and adjusts compensation.
@@ -30,10 +30,6 @@ All 5 features are ENABLED out of the box:
 
   BUNNY HOP (BHOP)
     Hold jump to auto-chain hops. Maintains momentum.
-
-  WALL BOUNCE ASSIST
-    Subtle aim correction + auto re-jump during wall bounces.
-    Natural feel, not overpowered.
 
   SNAKE MOVEMENT
     Rapid left-right strafe while prone or holding D-pad down.
@@ -47,7 +43,6 @@ Toggle features on/off (LED flashes to confirm):
   Anti-Recoil     :  Hold LT  + tap XBOX/PS button
   Slide Cancel    :  Hold LB  + tap RB
   Bhop            :  Hold LB  + tap VIEW/SHARE
-  Wall Bounce     :  Hold LB  + tap D-Pad DOWN
   Snake Movement  :  Hold LB  + tap OPTIONS/MENU
 
 LED feedback:
@@ -71,31 +66,27 @@ MENU ITEMS
 #0  [Toggle] Anti-Recoil          ON/OFF
 #1  [Toggle] Slide Cancel         ON/OFF
 #2  [Toggle] Bhop                 ON/OFF
-#3  [Toggle] Wall Bounce          ON/OFF
-#4  [Toggle] Snake Movement       ON/OFF
+#3  [Toggle] Snake Movement       ON/OFF
 ──────────────────────────────────────────────────
-#5  [Value]  Recoil Vertical      0-100      (default 32)
-#6  [Value]  Recoil Horizontal    -50 to 50  (default 0)
-#7  [Value]  Recoil Adaptive %    0-100      (default 70)
-#8  [Value]  Slide Cancel Delay   180-400ms  (default 260)
-#9  [Value]  Slide Cancel Mode    0-2        (default 0)
-#10 [Value]  Bhop Timing          30-80ms    (default 50)
-#11 [Value]  Wall Bounce Str      10-60      (default 35)
-#12 [Value]  Wall Bounce Window   100-350ms  (default 200)
-#13 [Value]  Snake Speed          5-20       (default 10)
-#14 [Value]  Snake Range          15-50      (default 30)
+#4  [Value]  Recoil Vertical      0-100      (default 32)
+#5  [Value]  Recoil Horizontal    -50 to 50  (default 0)
+#6  [Value]  Recoil Adaptive %    0-100      (default 70)
+#7  [Value]  Slide Cancel Delay   180-400ms  (default 260)
+#8  [Value]  Slide Cancel Mode    0-2        (default 0)
+#9  [Value]  Bhop Timing          30-80ms    (default 50)
+#10 [Value]  Snake Speed          5-20       (default 10)
+#11 [Value]  Snake Range          15-50      (default 30)
 
 
 IF SOMETHING FEELS OFF
 ======================
-Anti-recoil too strong?   -> Lower Recoil Vertical (#5)
-Anti-recoil too weak?     -> Raise Recoil Vertical (#5)
-Gun drifts sideways?      -> Adjust Recoil Horizontal (#6)
-Slide cancel too slow?    -> Lower Slide Cancel Delay (#8)
-Bhop missing jumps?       -> Raise Bhop Timing (#10)
-Wall bounce timing off?   -> Adjust Wall Bounce Window (#12)
-Snake too fast/slow?      -> Adjust Snake Speed (#13)
-Snake strafe too wide?    -> Lower Snake Range (#14)
+Anti-recoil too strong?   -> Lower Recoil Vertical (#4)
+Anti-recoil too weak?     -> Raise Recoil Vertical (#4)
+Gun drifts sideways?      -> Adjust Recoil Horizontal (#5)
+Slide cancel too slow?    -> Lower Slide Cancel Delay (#7)
+Bhop missing jumps?       -> Raise Bhop Timing (#9)
+Snake too fast/slow?      -> Adjust Snake Speed (#10)
+Snake strafe too wide?    -> Lower Snake Range (#11)
 
 
 SLIDE CANCEL MODES
