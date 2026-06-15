@@ -53,7 +53,8 @@
 #define V_SN_RANGE     7       // snake strafe range         (15..60)
 #define V_PRESET       8       // 0=Custom 1=AR 2=SMG 3=LMG
 #define V_ULTRA        9       // 0=Normal 1=Ultra (1ms)
-#define V_NUM          10
+#define V_HUD          10      // 0=Off 1=On (live recoil HUD while firing)
+#define V_NUM          11
 
 /* ----- menu pages ----------------------------------------------------- */
 #define PG_MAIN        0
@@ -82,7 +83,8 @@ int  val[V_NUM] = {
     12,    // V_SN_SPEED
     30,    // V_SN_RANGE
     1,     // V_PRESET (AR)
-    1      // V_ULTRA  (on)
+    1,     // V_ULTRA  (on)
+    1      // V_HUD    (on by default)
 };
 
 /* preset profiles: vert, horiz, adapt */
@@ -116,6 +118,9 @@ int  sn_t, sn_dir;
 bool menu_open;
 int  page, sel, scroll;  // scroll = first visible row index
 
+bool hud_active;         // is live HUD currently displayed
+int  hud_rumble;         // last rumble value for HUD display
+
 bool dirty;
 int  save_at;
 
@@ -141,6 +146,7 @@ init {
     bh_t = 0; sn_t = 0; sn_dir = 1;
 
     menu_open = FALSE; page = PG_MAIN; sel = 0; scroll = 0;
+    hud_active = FALSE; hud_rumble = 0;
     dirty = FALSE; save_at = 0;
 
     oled_boot();
@@ -179,6 +185,13 @@ main {
     /* ---- 1. anti-recoil ---- */
     if(feat[F_RECOIL] && aiming && firing) {
         recoil_tick();
+        /* live HUD while firing (throttled refresh) */
+        if(val[V_HUD] && !menu_open) {
+            if(!hud_active || (ar_t % 50) < 10) {
+                oled_hud();
+                hud_active = TRUE;
+            }
+        }
     } else {
         ar_t = 0;
         ar_phase = 0;
@@ -189,6 +202,8 @@ main {
             ar_smooth_h = 0;
             ar_accel = 0;
             ar_consist = 50;
+            /* restore status screen when HUD was active */
+            if(hud_active) { oled_status(); hud_active = FALSE; }
         }
     }
 
@@ -283,6 +298,9 @@ void recoil_tick() {
     } else {
         r = 0;
     }
+
+    /* store for HUD display */
+    hud_rumble = r;
 
     /* rate-of-change tracking for acceleration detection */
     int delta = r - r_prev;
@@ -466,7 +484,7 @@ int page_count() {
     if(page == PG_MAIN)     return 4;
     if(page == PG_RECOIL)   return 5;
     if(page == PG_MOVE)     return 7;
-    if(page == PG_SETTINGS) return 5;
+    if(page == PG_SETTINGS) return 6;  // added Live HUD toggle
     return 4;
 }
 
@@ -488,7 +506,8 @@ void menu_select() {
         else if(sel == 6) { page = PG_MAIN; sel = 1; scroll = 0; }
     }
     else if(page == PG_SETTINGS) {
-        if(sel == 4)      { page = PG_MAIN; sel = 2; scroll = 0; }
+        if(sel == 4)      { val[V_HUD] = !val[V_HUD]; dirty = TRUE; led_flash(val[V_HUD]); }
+        if(sel == 5)      { page = PG_MAIN; sel = 2; scroll = 0; }
     }
     oled_menu();
 }
@@ -583,6 +602,56 @@ void draw_preset(int x, int y, int col) {
 }
 
 /* screens ----------------------------------------------------------------- */
+/* live recoil HUD - shows engine state while firing */
+void oled_hud() {
+    cls_oled(OLED_BLACK);
+
+    /* header bar with "LIVE" indicator */
+    rect_oled(0, 0, SCR_W - 1, 11, 1, OLED_WHITE);
+    print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "RECOIL");
+    print(50, 2, OLED_FONT_SMALL, OLED_BLACK, "LIVE");
+
+    /* phase indicator: P0 P1 P2 P3 P4 with current highlighted */
+    int px = 4;
+    int py = 16;
+    print(px, py, OLED_FONT_SMALL, OLED_WHITE, "Phase:");
+    if(ar_phase == 0) { rect_oled(44, py-1, 14, 10, 1, OLED_WHITE); print(46, py, OLED_FONT_SMALL, OLED_BLACK, "0"); }
+    else print(46, py, OLED_FONT_SMALL, OLED_WHITE, "0");
+    if(ar_phase == 1) { rect_oled(58, py-1, 14, 10, 1, OLED_WHITE); print(60, py, OLED_FONT_SMALL, OLED_BLACK, "1"); }
+    else print(60, py, OLED_FONT_SMALL, OLED_WHITE, "1");
+    if(ar_phase == 2) { rect_oled(72, py-1, 14, 10, 1, OLED_WHITE); print(74, py, OLED_FONT_SMALL, OLED_BLACK, "2"); }
+    else print(74, py, OLED_FONT_SMALL, OLED_WHITE, "2");
+    if(ar_phase == 3) { rect_oled(86, py-1, 14, 10, 1, OLED_WHITE); print(88, py, OLED_FONT_SMALL, OLED_BLACK, "3"); }
+    else print(88, py, OLED_FONT_SMALL, OLED_WHITE, "3");
+    if(ar_phase == 4) { rect_oled(100, py-1, 14, 10, 1, OLED_WHITE); print(102, py, OLED_FONT_SMALL, OLED_BLACK, "4"); }
+    else print(102, py, OLED_FONT_SMALL, OLED_WHITE, "4");
+
+    /* consistency bar */
+    int cy = 30;
+    print(4, cy, OLED_FONT_SMALL, OLED_WHITE, "Consist:");
+    int cbar_x = 56; int cbar_w = 68;
+    int cfill = iclamp((ar_consist * cbar_w) / 100, 0, cbar_w);
+    rect_oled(cbar_x, cy, cbar_w, 8, 0, OLED_WHITE);
+    if(cfill > 0) rect_oled(cbar_x, cy, cfill, 8, 1, OLED_WHITE);
+
+    /* rumble intensity bar */
+    int ry = 42;
+    print(4, ry, OLED_FONT_SMALL, OLED_WHITE, "Rumble:");
+    int rbar_x = 56; int rbar_w = 68;
+    int rfill = iclamp((hud_rumble * rbar_w) / 100, 0, rbar_w);
+    rect_oled(rbar_x, ry, rbar_w, 8, 0, OLED_WHITE);
+    if(rfill > 0) rect_oled(rbar_x, ry, rfill, 8, 1, OLED_WHITE);
+
+    /* pull strength indicator */
+    int ly = 54;
+    print(4, ly, OLED_FONT_SMALL, OLED_WHITE, "Pull:");
+    int pull = iclamp(ar_smooth_v, 0, 95);
+    int lbar_x = 40; int lbar_w = 84;
+    int lfill = iclamp((pull * lbar_w) / 95, 0, lbar_w);
+    rect_oled(lbar_x, ly, lbar_w, 8, 0, OLED_WHITE);
+    if(lfill > 0) rect_oled(lbar_x, ly, lfill, 8, 1, OLED_WHITE);
+}
+
 void oled_boot() {
     cls_oled(OLED_BLACK);
     rect_oled(0, 0, SCR_W - 1, 63, 0, OLED_WHITE);
@@ -650,7 +719,8 @@ void menu_row(int i, int col) {
         if(i == 1) { print(4, y, OLED_FONT_SMALL, col, "SN Range"); mark_bar(i, val[V_SN_RANGE], 15, 60); }
         if(i == 2) { print(4, y, OLED_FONT_SMALL, col, "Preset");   draw_preset(86, y, col); }
         if(i == 3) { print(4, y, OLED_FONT_SMALL, col, "1ms Mode"); mark_onoff(i, val[V_ULTRA]); }
-        if(i == 4) print(4, y, OLED_FONT_SMALL, col, "< Back");
+        if(i == 4) { print(4, y, OLED_FONT_SMALL, col, "Live HUD"); mark_onoff(i, val[V_HUD]); }
+        if(i == 5) print(4, y, OLED_FONT_SMALL, col, "< Back");
     }
 }
 
@@ -715,6 +785,7 @@ void cfg_load() {
     val[V_SN_RANGE] = iclamp(val[V_SN_RANGE],15,  60);
     val[V_PRESET]   = iclamp(val[V_PRESET],   0,   3);
     val[V_ULTRA]    = iclamp(val[V_ULTRA],    0,   1);
+    val[V_HUD]      = iclamp(val[V_HUD],      0,   1);
 }
 
 void cfg_save() {
