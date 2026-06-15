@@ -2,6 +2,31 @@
 
 All notable changes to **BO7 PRO** (Titan Two GPC script).
 
+## v12.2.0 — "Live Tuning" (2026-06-15)
+
+### New: Scrolling Menu
+- Viewport system for pages with more rows than fit on 64px OLED
+- Movement page (7 rows) now fully navigable — BH Time and Back visible
+- Scroll indicators (^/v) in header when content above/below
+- Auto-scrolls to keep selection in view
+
+### New: Live Recoil HUD
+Real-time OLED display while firing (toggle: Settings → Live HUD):
+- **Phase indicator**: P0–P4 with current phase highlighted
+- **Consistency bar**: shows pattern learning score (0-100%)
+- **Rumble bar**: real-time weapon rumble intensity
+- **Pull bar**: actual compensation being applied (0-95)
+
+See the anti-recoil engine working and tune settings with immediate feedback.
+
+### Hardening
+- Phase-0 moderated 180%→150% to prevent first-shot aim slam
+- Safety clamps: vertical [0,95], horizontal [-70,70], final output [-100,100]
+- Renamed `var`→`rvar` (avoid reserved-word collision)
+- Hoisted local decls for GPC2 compatibility
+
+---
+
 ## v12.1.0 — "Recoil Engine" (2026-06-15)
 
 Major anti-recoil system upgrade implementing three best-in-class methods.

@@ -26,7 +26,7 @@
      Menu          : LT + MENU (no LB)   Nav=D-Pad  Adjust=L/R  Select=A  Back=B
    =========================================================================== */
 
-#pragma METAINFO("BO7 PRO", 12, 1, "BO7")
+#pragma METAINFO("BO7 PRO", 12, 2, "BO7")
 #include <xb1.gph>
 
 /* ----- tunable timing (ms) -------------------------------------------- */
@@ -656,8 +656,8 @@ void oled_boot() {
     cls_oled(OLED_BLACK);
     rect_oled(0, 0, SCR_W - 1, 63, 0, OLED_WHITE);
     print(34, 14, OLED_FONT_MEDIUM, OLED_WHITE, "BO7 PRO");
-    print(46, 34, OLED_FONT_SMALL,  OLED_WHITE, "v12.1");
-    print(14, 48, OLED_FONT_SMALL,  OLED_WHITE, "RECOIL ENGINE");
+    print(46, 34, OLED_FONT_SMALL,  OLED_WHITE, "v12.2");
+    print(18, 48, OLED_FONT_SMALL,  OLED_WHITE, "LIVE TUNING");
 }
 
 void oled_status() {
