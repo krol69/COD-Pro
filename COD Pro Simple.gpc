@@ -1,0 +1,362 @@
+/* ===========================================================================
+   BO7 PRO SIMPLE  -  Titan Two  -  GPC2
+   v12.2.0  "No OLED"
+
+   Core features without OLED display (for maximum compatibility).
+   All features work via LED feedback and button combos.
+
+   FEATURES
+     1. Smart Anti-Recoil   (rumble-adaptive, 5-phase burst compensation)
+     2. Slide Cancel        (BO7 / Jump / Legacy modes)
+     3. Bunny Hop           (hold-jump auto chain)
+     4. Snake Movement      (evasive strafe while prone)
+
+   CONTROLS
+     Quick toggles : LT+XBOX recoil | LB+RB slide | LB+VIEW bhop | LB+MENU snake
+     Quick-tune    : LT+RS+D-pad adjusts Vertical/Adaptive on the fly
+     Presets       : LT + D-Pad  (UP=AR RIGHT=SMG DOWN=LMG LEFT=Custom)
+   =========================================================================== */
+
+#pragma METAINFO("BO7 PRO", 12, 2, "BO7")
+#include <xb1.gph>
+
+#define TAP            14
+#define GAP            26
+#define VM_ULTRA       -9
+#define VM_NORMAL      -6
+
+#define F_RECOIL       0
+#define F_SLIDE        1
+#define F_BHOP         2
+#define F_SNAKE        3
+#define F_NUM          4
+
+#define V_VERT         0
+#define V_HORIZ        1
+#define V_ADAPT        2
+#define V_SC_DELAY     3
+#define V_SC_MODE      4
+#define V_BH_TIME      5
+#define V_SN_SPEED     6
+#define V_SN_RANGE     7
+#define V_PRESET       8
+#define V_ULTRA        9
+#define V_NUM          10
+
+bool feat[F_NUM] = { TRUE, TRUE, TRUE, TRUE };
+
+int val[V_NUM] = {
+    30,    // V_VERT
+    0,     // V_HORIZ
+    70,    // V_ADAPT
+    220,   // V_SC_DELAY
+    0,     // V_SC_MODE
+    40,    // V_BH_TIME
+    12,    // V_SN_SPEED
+    30,    // V_SN_RANGE
+    1,     // V_PRESET (AR)
+    1      // V_ULTRA
+};
+
+int pset_ar[3]  = { 30, 0, 70 };
+int pset_smg[3] = { 20, 0, 55 };
+int pset_lmg[3] = { 42, 3, 85 };
+
+bool firing, aiming;
+int ar_t, ar_mult, ar_learn, ar_phase;
+int ar_smooth_v, ar_smooth_h, ar_accel, ar_consist;
+int r_hist[8], r_idx, r_prev;
+int r_delta[4], d_idx;
+int bh_t, sn_t, sn_dir;
+
+init {
+    vm_tctrl(val[V_ULTRA] ? VM_ULTRA : VM_NORMAL);
+    ar_t = 0; ar_mult = 100; ar_learn = 0;
+    ar_phase = 0; ar_smooth_v = 0; ar_smooth_h = 0;
+    ar_accel = 0; ar_consist = 50;
+    r_idx = 0; r_prev = 0; d_idx = 0;
+    bh_t = 0; sn_t = 0; sn_dir = 1;
+}
+
+main {
+    firing = get_val(XB1_RT) > 50;
+    aiming = get_val(XB1_LT) > 50;
+
+    quick_toggles();
+    presets();
+
+    if(feat[F_RECOIL] && aiming && firing) {
+        recoil_tick();
+    } else {
+        ar_t = 0;
+        ar_phase = 0;
+        if(!firing) {
+            ar_learn = 0;
+            ar_smooth_v = 0;
+            ar_smooth_h = 0;
+            ar_accel = 0;
+            ar_consist = 50;
+        }
+    }
+
+    if(feat[F_SLIDE] && event_press(XB1_B) && get_val(XB1_LY) < -20) {
+        if(val[V_SC_MODE] == 0)      combo_run(SlideBO7);
+        else if(val[V_SC_MODE] == 1) combo_run(SlideJump);
+        else                         combo_run(SlideLegacy);
+    }
+
+    if(feat[F_BHOP] && get_val(XB1_A) > 50) {
+        bh_t = bh_t + get_rtime();
+        if(bh_t >= val[V_BH_TIME]) { combo_run(Bhop); bh_t = 0; }
+    } else {
+        bh_t = 0;
+    }
+
+    if(feat[F_SNAKE]) snake_tick();
+    else sn_t = 0;
+}
+
+void quick_toggles() {
+    if(aiming && get_val(XB1_RS) > 50) {
+        if(event_press(XB1_UP)) {
+            val[V_VERT] = iclamp(val[V_VERT] + 5, 0, 100);
+            combo_run(LedAdjust);
+        }
+        if(event_press(XB1_DOWN)) {
+            val[V_VERT] = iclamp(val[V_VERT] - 5, 0, 100);
+            combo_run(LedAdjust);
+        }
+        if(event_press(XB1_RIGHT)) {
+            val[V_ADAPT] = iclamp(val[V_ADAPT] + 10, 0, 100);
+            combo_run(LedAdjust);
+        }
+        if(event_press(XB1_LEFT)) {
+            val[V_ADAPT] = iclamp(val[V_ADAPT] - 10, 0, 100);
+            combo_run(LedAdjust);
+        }
+        set_val(XB1_UP, 0); set_val(XB1_DOWN, 0);
+        set_val(XB1_LEFT, 0); set_val(XB1_RIGHT, 0);
+    }
+
+    if(aiming && event_press(XB1_XBOX)) {
+        feat[F_RECOIL] = !feat[F_RECOIL];
+        led_flash(feat[F_RECOIL]);
+    }
+    if(get_val(XB1_LB) > 50) {
+        if(event_press(XB1_RB)) {
+            feat[F_SLIDE] = !feat[F_SLIDE];
+            led_flash(feat[F_SLIDE]);
+        }
+        if(event_press(XB1_VIEW)) {
+            feat[F_BHOP] = !feat[F_BHOP];
+            led_flash(feat[F_BHOP]);
+        }
+        if(event_press(XB1_MENU)) {
+            feat[F_SNAKE] = !feat[F_SNAKE];
+            led_flash(feat[F_SNAKE]);
+            set_val(XB1_MENU, 0);
+        }
+    }
+}
+
+void presets() {
+    if(aiming && get_val(XB1_LB) < 20 && get_val(XB1_RS) < 50) {
+        if(event_press(XB1_UP))    preset_set(1);
+        if(event_press(XB1_RIGHT)) preset_set(2);
+        if(event_press(XB1_DOWN))  preset_set(3);
+        if(event_press(XB1_LEFT))  preset_set(0);
+    }
+}
+
+void preset_set(int p) {
+    val[V_PRESET] = p;
+    if(p == 1)      { val[V_VERT]=pset_ar[0];  val[V_HORIZ]=pset_ar[1];  val[V_ADAPT]=pset_ar[2];  }
+    else if(p == 2) { val[V_VERT]=pset_smg[0]; val[V_HORIZ]=pset_smg[1]; val[V_ADAPT]=pset_smg[2]; }
+    else if(p == 3) { val[V_VERT]=pset_lmg[0]; val[V_HORIZ]=pset_lmg[1]; val[V_ADAPT]=pset_lmg[2]; }
+    combo_run(LedPreset);
+}
+
+void recoil_tick() {
+    int ra = get_rumble(RUMBLE_A);
+    int rb = get_rumble(RUMBLE_B);
+    int r = 0;
+
+    if(rb > 8 && rb < 95) {
+        r = rb;
+        if(ra > 15 && ra < 90) r = (rb * 3 + ra) / 4;
+    } else if(ra > 12 && ra < 95) {
+        r = ra;
+    }
+
+    int delta = r - r_prev;
+    r_delta[d_idx] = delta;
+    d_idx = (d_idx + 1) % 4;
+
+    r_hist[r_idx] = r;
+    r_idx = (r_idx + 1) % 8;
+
+    int avg = (r_hist[0] + r_hist[1] + r_hist[2] + r_hist[3] +
+               r_hist[4]*2 + r_hist[5]*2 + r_hist[6]*3 + r_hist[7]*3) / 14;
+
+    int rvar = abs(r_hist[0]-avg) + abs(r_hist[1]-avg) + abs(r_hist[2]-avg) +
+               abs(r_hist[3]-avg) + abs(r_hist[4]-avg) + abs(r_hist[5]-avg) +
+               abs(r_hist[6]-avg) + abs(r_hist[7]-avg);
+
+    if(rvar < 24)       ar_consist = imin(ar_consist + 3, 100);
+    else if(rvar > 80)  ar_consist = imax(ar_consist - 2, 20);
+    else                ar_consist = 50 + (80 - rvar) / 2;
+
+    ar_accel = (r_delta[0] + r_delta[1] + r_delta[2] + r_delta[3]) / 4;
+
+    if(ar_consist > 75) ar_learn = imin(ar_learn + 2, 15);
+    else if(ar_consist < 35) ar_learn = imax(ar_learn - 1, -6);
+
+    if(ar_accel > 5) ar_learn = imin(ar_learn + 1, 15);
+    else if(ar_accel < -5) ar_learn = imax(ar_learn - 1, -6);
+
+    r_prev = r;
+
+    if(r > 8 && r < 95) {
+        if(r > 65)       ar_mult = 110 + ((r - 65) * val[V_ADAPT] / 20);
+        else if(r > 45)  ar_mult = 100 + ((r - 45) * val[V_ADAPT] / 35);
+        else if(r > 25)  ar_mult = 90  + ((r - 25) * val[V_ADAPT] / 50);
+        else             ar_mult = 80  + ((r -  8) * val[V_ADAPT] / 85);
+    } else {
+        ar_mult = 100;
+    }
+
+    int vs = (val[V_VERT] * ar_mult) / 100 + ar_learn;
+    int hs = (val[V_HORIZ] * ar_mult) / 100;
+
+    if(r > 8) {
+        ar_t = ar_t + get_rtime();
+        int phase_mult = 100;
+
+        if(ar_t < 80) {
+            ar_phase = 0;
+            phase_mult = 150 + (r / 3);
+        }
+        else if(ar_t < 200) {
+            ar_phase = 1;
+            phase_mult = 140 + (r / 4);
+        }
+        else if(ar_t < 600) {
+            ar_phase = 2;
+            phase_mult = 120 + (r / 4) + (ar_consist / 10);
+        }
+        else if(ar_t < 1200) {
+            ar_phase = 3;
+            phase_mult = 110 + (r / 5);
+        }
+        else {
+            ar_phase = 4;
+            phase_mult = 100 + (r / 6);
+        }
+
+        vs = (vs * phase_mult) / 100;
+        if(ar_phase < 2) hs = hs * 120 / 100;
+    } else {
+        ar_t = 0;
+        ar_phase = 0;
+    }
+
+    vs = iclamp(vs, 0, 95);
+    hs = iclamp(hs, -70, 70);
+
+    ar_smooth_v = (ar_smooth_v * 2 + vs) / 3;
+    ar_smooth_h = (ar_smooth_h * 2 + hs) / 3;
+
+    int lt = get_val(XB1_LT);
+    int ads_scale = 80 + (lt * 20 / 100);
+
+    int final_v = (ar_smooth_v * ads_scale) / 100;
+    int final_h = (ar_smooth_h * ads_scale) / 100;
+
+    set_val(XB1_RY, iclamp(get_val(XB1_RY) + final_v, -100, 100));
+    if(final_h != 0) set_val(XB1_RX, iclamp(get_val(XB1_RX) + final_h, -100, 100));
+}
+
+void snake_tick() {
+    if(get_ptime(XB1_B) > 100 || get_val(XB1_DOWN) > 50) {
+        sn_t = sn_t + get_rtime();
+        if(sn_t >= (100 / val[V_SN_SPEED])) { sn_dir = -sn_dir; sn_t = 0; }
+        int nx = get_val(XB1_LX) + sn_dir * val[V_SN_RANGE];
+        set_val(XB1_LX, iclamp(nx, -100, 100));
+    } else {
+        sn_t = 0;
+    }
+}
+
+void led_flash(bool on) {
+    if(on) combo_run(LedOn);
+    else   combo_run(LedOff);
+}
+
+int iclamp(int x, int lo, int hi) { if(x < lo) return lo; if(x > hi) return hi; return x; }
+int imin(int a, int b) { if(a < b) return a; return b; }
+int imax(int a, int b) { if(a > b) return a; return b; }
+
+combo SlideBO7 {
+    set_val(XB1_B, 100); wait(TAP);
+    set_val(XB1_B, 0);
+    wait(val[V_SC_DELAY]);
+    set_val(XB1_LT, 100); wait(TAP);
+    set_val(XB1_LT, 0);   wait(GAP);
+    set_val(XB1_A, 100);  wait(TAP);
+    set_val(XB1_A, 0);    wait(30);
+    set_val(XB1_B, 100);  wait(20);
+    set_val(XB1_B, 0);
+}
+
+combo SlideJump {
+    set_val(XB1_B, 100); wait(TAP);
+    set_val(XB1_B, 0);
+    wait(val[V_SC_DELAY]);
+    set_val(XB1_A, 100); wait(TAP);
+    set_val(XB1_A, 0);
+}
+
+combo SlideLegacy {
+    set_val(XB1_B, 100); wait(TAP);
+    set_val(XB1_B, 0);
+    wait(val[V_SC_DELAY]);
+    set_val(XB1_B, 100); wait(TAP);
+    set_val(XB1_B, 0);   wait(GAP);
+    set_val(XB1_A, 100); wait(TAP);
+    set_val(XB1_A, 0);
+}
+
+combo Bhop {
+    set_val(XB1_A, 0);   wait(10);
+    set_val(XB1_A, 100); wait(16);
+}
+
+combo LedOn {
+    led_set(LED_3, 100.0, 0);
+    wait(140);
+    led_set(LED_1, 60.0, 0); led_set(LED_2, 60.0, 0);
+    led_set(LED_3, 60.0, 0); led_set(LED_4, 60.0, 0);
+}
+
+combo LedOff {
+    led_set(LED_2, 100.0, 0);
+    wait(140);
+    led_set(LED_1, 60.0, 0); led_set(LED_2, 60.0, 0);
+    led_set(LED_3, 60.0, 0); led_set(LED_4, 60.0, 0);
+}
+
+combo LedAdjust {
+    led_set(LED_3, 100.0, 0);
+    wait(30);
+    led_set(LED_1, 60.0, 0); led_set(LED_2, 60.0, 0);
+    led_set(LED_3, 60.0, 0); led_set(LED_4, 60.0, 0);
+}
+
+combo LedPreset {
+    led_set(LED_3, 100.0, 0);
+    wait(90);
+    led_set(LED_1, 100.0, 0);
+    wait(90);
+    led_set(LED_1, 60.0, 0); led_set(LED_2, 60.0, 0);
+    led_set(LED_3, 60.0, 0); led_set(LED_4, 60.0, 0);
+}
