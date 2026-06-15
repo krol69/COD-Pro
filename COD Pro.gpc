@@ -114,7 +114,7 @@ int  bh_t;
 int  sn_t, sn_dir;
 
 bool menu_open;
-int  page, sel;
+int  page, sel, scroll;  // scroll = first visible row index
 
 bool dirty;
 int  save_at;
@@ -140,7 +140,7 @@ init {
 
     bh_t = 0; sn_t = 0; sn_dir = 1;
 
-    menu_open = FALSE; page = PG_MAIN; sel = 0;
+    menu_open = FALSE; page = PG_MAIN; sel = 0; scroll = 0;
     dirty = FALSE; save_at = 0;
 
     oled_boot();
@@ -166,7 +166,7 @@ main {
     /* open / close menu : LT + MENU (without LB) */
     if(aiming && get_val(XB1_LB) < 20 && event_press(XB1_MENU)) {
         menu_open = !menu_open;
-        if(menu_open) { page = PG_MAIN; sel = 0; oled_menu(); led_blue(); }
+        if(menu_open) { page = PG_MAIN; sel = 0; scroll = 0; oled_menu(); led_blue(); }
         else          { oled_status(); led_white(); }
         set_val(XB1_MENU, 0);
     }
@@ -422,8 +422,16 @@ void snake_tick() {
 }
 
 /* ===========================================================================
-   MENU  (state machine)
+   MENU  (state machine with scrolling viewport)
    =========================================================================== */
+
+#define ROWS_VIS  4   // max rows visible on 64px OLED (header + 4 rows fit cleanly)
+
+void scroll_to_sel() {
+    /* keep selection within visible viewport */
+    if(sel < scroll) scroll = sel;
+    else if(sel > scroll + ROWS_VIS) scroll = sel - ROWS_VIS;
+}
 
 void menu_tick() {
     /* block gameplay while in menu */
@@ -432,13 +440,23 @@ void menu_tick() {
 
     if(event_press(XB1_B)) {
         if(page == PG_MAIN) { menu_open = FALSE; oled_status(); led_white(); }
-        else                { page = PG_MAIN; sel = 0; oled_menu(); }
+        else                { page = PG_MAIN; sel = 0; scroll = 0; oled_menu(); }
         return;
     }
 
     int n = page_count();
-    if(event_press(XB1_UP))    { sel = (sel + n - 1) % n; oled_menu(); combo_run(LedNav); }
-    if(event_press(XB1_DOWN))  { sel = (sel + 1) % n;     oled_menu(); combo_run(LedNav); }
+    if(event_press(XB1_UP)) {
+        sel = (sel + n - 1) % n;
+        if(sel == n - 1) scroll = imax(0, n - 1 - ROWS_VIS);  // wrap to bottom
+        else scroll_to_sel();
+        oled_menu(); combo_run(LedNav);
+    }
+    if(event_press(XB1_DOWN)) {
+        sel = (sel + 1) % n;
+        if(sel == 0) scroll = 0;  // wrap to top
+        else scroll_to_sel();
+        oled_menu(); combo_run(LedNav);
+    }
     if(event_press(XB1_A))     menu_select();
     if(event_press(XB1_RIGHT)) menu_adjust(1);
     if(event_press(XB1_LEFT))  menu_adjust(-1);
@@ -454,23 +472,23 @@ int page_count() {
 
 void menu_select() {
     if(page == PG_MAIN) {
-        if(sel == 0)      { page = PG_RECOIL;   sel = 0; }
-        else if(sel == 1) { page = PG_MOVE;     sel = 0; }
-        else if(sel == 2) { page = PG_SETTINGS; sel = 0; }
+        if(sel == 0)      { page = PG_RECOIL;   sel = 0; scroll = 0; }
+        else if(sel == 1) { page = PG_MOVE;     sel = 0; scroll = 0; }
+        else if(sel == 2) { page = PG_SETTINGS; sel = 0; scroll = 0; }
         else              { menu_open = FALSE; oled_status(); led_white(); return; }
     }
     else if(page == PG_RECOIL) {
         if(sel == 0)      { feat[F_RECOIL] = !feat[F_RECOIL]; dirty = TRUE; led_flash(feat[F_RECOIL]); }
-        else if(sel == 4) { page = PG_MAIN; sel = 0; }
+        else if(sel == 4) { page = PG_MAIN; sel = 0; scroll = 0; }
     }
     else if(page == PG_MOVE) {
         if(sel == 0)      { feat[F_SLIDE] = !feat[F_SLIDE]; dirty = TRUE; led_flash(feat[F_SLIDE]); }
         else if(sel == 1) { feat[F_BHOP]  = !feat[F_BHOP];  dirty = TRUE; led_flash(feat[F_BHOP]); }
         else if(sel == 2) { feat[F_SNAKE] = !feat[F_SNAKE]; dirty = TRUE; led_flash(feat[F_SNAKE]); }
-        else if(sel == 6) { page = PG_MAIN; sel = 1; }
+        else if(sel == 6) { page = PG_MAIN; sel = 1; scroll = 0; }
     }
     else if(page == PG_SETTINGS) {
-        if(sel == 4)      { page = PG_MAIN; sel = 2; }
+        if(sel == 4)      { page = PG_MAIN; sel = 2; scroll = 0; }
     }
     oled_menu();
 }
@@ -508,22 +526,32 @@ void menu_adjust(int d) {
    Numeric values render as bars (uses only verified primitives).
    =========================================================================== */
 
-/* geometry helpers -------------------------------------------------------- */
-int row_y(int i)  { return ROW_TOP + i * ROW_H; }
-int row_col(int i){ if(i == sel) return OLED_BLACK; return OLED_WHITE; }   // inverted on highlight
+/* geometry helpers (viewport-aware) --------------------------------------- */
+
+/* convert logical row index to screen Y (accounting for scroll) */
+int row_y(int i)  { return ROW_TOP + (i - scroll) * ROW_H; }
+
+/* check if row is in visible viewport */
+bool row_vis(int i) { return (i >= scroll && i <= scroll + ROWS_VIS); }
+
+/* color: inverted on highlight */
+int row_col(int i){ if(i == sel) return OLED_BLACK; return OLED_WHITE; }
 
 void row_hl(int i) {
+    if(!row_vis(i)) return;
     int y = row_y(i);
     if(i == sel) rect_oled(0, y - 1, SCR_W - 1, ROW_H - 1, 1, OLED_WHITE);
 }
 
 void mark_onoff(int i, bool st) {
+    if(!row_vis(i)) return;
     int y = row_y(i);
     if(st) print(86, y, OLED_FONT_SMALL, row_col(i), "ON");
     else   print(86, y, OLED_FONT_SMALL, row_col(i), "OFF");
 }
 
 void mark_mode(int i, int m) {
+    if(!row_vis(i)) return;
     int y = row_y(i);
     if(m == 0)      print(78, y, OLED_FONT_SMALL, row_col(i), "BO7");
     else if(m == 1) print(78, y, OLED_FONT_SMALL, row_col(i), "JUMP");
@@ -531,12 +559,19 @@ void mark_mode(int i, int m) {
 }
 
 void mark_bar(int i, int v, int lo, int hi) {
+    if(!row_vis(i)) return;
     int y = row_y(i);
     int bx = 74; int bw = 48; int bh = 7;
     int span = hi - lo; if(span < 1) span = 1;
     int fill = iclamp(((v - lo) * bw) / span, 0, bw);
     rect_oled(bx, y, bw, bh, 0, row_col(i));
     if(fill > 0) rect_oled(bx, y, fill, bh, 1, row_col(i));
+}
+
+/* scroll indicators in header bar */
+void draw_scroll_arrows(int n) {
+    if(scroll > 0) print(110, 2, OLED_FONT_SMALL, OLED_BLACK, "^");
+    if(scroll + ROWS_VIS < n - 1) print(120, 2, OLED_FONT_SMALL, OLED_BLACK, "v");
 }
 
 /* prints the active preset name at x,y (no string params used) */
@@ -562,58 +597,80 @@ void oled_status() {
     print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "BO7 PRO");
     draw_preset(96, 2, OLED_BLACK);
 
-    print(4, row_y(0), OLED_FONT_SMALL, OLED_WHITE, "Recoil");
-    print(4, row_y(1), OLED_FONT_SMALL, OLED_WHITE, "Slide");
-    print(4, row_y(2), OLED_FONT_SMALL, OLED_WHITE, "Bhop");
-    print(4, row_y(3), OLED_FONT_SMALL, OLED_WHITE, "Snake");
-    status_mark(0, feat[F_RECOIL]);
-    status_mark(1, feat[F_SLIDE]);
-    status_mark(2, feat[F_BHOP]);
-    status_mark(3, feat[F_SNAKE]);
+    /* fixed positions for status screen (no scroll) */
+    int y0 = ROW_TOP;
+    int y1 = ROW_TOP + ROW_H;
+    int y2 = ROW_TOP + ROW_H * 2;
+    int y3 = ROW_TOP + ROW_H * 3;
+
+    print(4, y0, OLED_FONT_SMALL, OLED_WHITE, "Recoil");
+    print(4, y1, OLED_FONT_SMALL, OLED_WHITE, "Slide");
+    print(4, y2, OLED_FONT_SMALL, OLED_WHITE, "Bhop");
+    print(4, y3, OLED_FONT_SMALL, OLED_WHITE, "Snake");
+
+    if(feat[F_RECOIL]) print(64, y0, OLED_FONT_SMALL, OLED_WHITE, "ON");
+    else               print(64, y0, OLED_FONT_SMALL, OLED_WHITE, "--");
+    if(feat[F_SLIDE])  print(64, y1, OLED_FONT_SMALL, OLED_WHITE, "ON");
+    else               print(64, y1, OLED_FONT_SMALL, OLED_WHITE, "--");
+    if(feat[F_BHOP])   print(64, y2, OLED_FONT_SMALL, OLED_WHITE, "ON");
+    else               print(64, y2, OLED_FONT_SMALL, OLED_WHITE, "--");
+    if(feat[F_SNAKE])  print(64, y3, OLED_FONT_SMALL, OLED_WHITE, "ON");
+    else               print(64, y3, OLED_FONT_SMALL, OLED_WHITE, "--");
 }
 
-void status_mark(int i, bool st) {
+void menu_row(int i, int col) {
+    if(!row_vis(i)) return;
+    row_hl(i);
     int y = row_y(i);
-    if(st) print(64, y, OLED_FONT_SMALL, OLED_WHITE, "ON");
-    else   print(64, y, OLED_FONT_SMALL, OLED_WHITE, "--");
+
+    if(page == PG_MAIN) {
+        if(i == 0) print(4, y, OLED_FONT_SMALL, col, "Anti-Recoil");
+        if(i == 1) print(4, y, OLED_FONT_SMALL, col, "Movement");
+        if(i == 2) print(4, y, OLED_FONT_SMALL, col, "Settings");
+        if(i == 3) print(4, y, OLED_FONT_SMALL, col, "Exit");
+    }
+    else if(page == PG_RECOIL) {
+        if(i == 0) { print(4, y, OLED_FONT_SMALL, col, "Enable");     mark_onoff(i, feat[F_RECOIL]); }
+        if(i == 1) { print(4, y, OLED_FONT_SMALL, col, "Vertical");   mark_bar(i, val[V_VERT],  0, 100); }
+        if(i == 2) { print(4, y, OLED_FONT_SMALL, col, "Horizontal"); mark_bar(i, val[V_HORIZ], -50, 50); }
+        if(i == 3) { print(4, y, OLED_FONT_SMALL, col, "Adaptive");   mark_bar(i, val[V_ADAPT], 0, 100); }
+        if(i == 4) print(4, y, OLED_FONT_SMALL, col, "< Back");
+    }
+    else if(page == PG_MOVE) {
+        if(i == 0) { print(4, y, OLED_FONT_SMALL, col, "Slide");    mark_onoff(i, feat[F_SLIDE]); }
+        if(i == 1) { print(4, y, OLED_FONT_SMALL, col, "Bhop");     mark_onoff(i, feat[F_BHOP]); }
+        if(i == 2) { print(4, y, OLED_FONT_SMALL, col, "Snake");    mark_onoff(i, feat[F_SNAKE]); }
+        if(i == 3) { print(4, y, OLED_FONT_SMALL, col, "SC Delay"); mark_bar(i, val[V_SC_DELAY], 150, 400); }
+        if(i == 4) { print(4, y, OLED_FONT_SMALL, col, "SC Mode");  mark_mode(i, val[V_SC_MODE]); }
+        if(i == 5) { print(4, y, OLED_FONT_SMALL, col, "BH Time");  mark_bar(i, val[V_BH_TIME], 25, 80); }
+        if(i == 6) print(4, y, OLED_FONT_SMALL, col, "< Back");
+    }
+    else if(page == PG_SETTINGS) {
+        if(i == 0) { print(4, y, OLED_FONT_SMALL, col, "SN Speed"); mark_bar(i, val[V_SN_SPEED], 5, 25); }
+        if(i == 1) { print(4, y, OLED_FONT_SMALL, col, "SN Range"); mark_bar(i, val[V_SN_RANGE], 15, 60); }
+        if(i == 2) { print(4, y, OLED_FONT_SMALL, col, "Preset");   draw_preset(86, y, col); }
+        if(i == 3) { print(4, y, OLED_FONT_SMALL, col, "1ms Mode"); mark_onoff(i, val[V_ULTRA]); }
+        if(i == 4) print(4, y, OLED_FONT_SMALL, col, "< Back");
+    }
 }
 
 void oled_menu() {
     cls_oled(OLED_BLACK);
     rect_oled(0, 0, SCR_W - 1, 11, 1, OLED_WHITE);
 
-    if(page == PG_MAIN) {
-        print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "MAIN MENU");
-        row_hl(0); print(4, row_y(0), OLED_FONT_SMALL, row_col(0), "Anti-Recoil");
-        row_hl(1); print(4, row_y(1), OLED_FONT_SMALL, row_col(1), "Movement");
-        row_hl(2); print(4, row_y(2), OLED_FONT_SMALL, row_col(2), "Settings");
-        row_hl(3); print(4, row_y(3), OLED_FONT_SMALL, row_col(3), "Exit");
-    }
-    else if(page == PG_RECOIL) {
-        print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "ANTI-RECOIL");
-        row_hl(0); print(4, row_y(0), OLED_FONT_SMALL, row_col(0), "Enable");     mark_onoff(0, feat[F_RECOIL]);
-        row_hl(1); print(4, row_y(1), OLED_FONT_SMALL, row_col(1), "Vertical");   mark_bar(1, val[V_VERT],  0, 100);
-        row_hl(2); print(4, row_y(2), OLED_FONT_SMALL, row_col(2), "Horizontal"); mark_bar(2, val[V_HORIZ], -50, 50);
-        row_hl(3); print(4, row_y(3), OLED_FONT_SMALL, row_col(3), "Adaptive");   mark_bar(3, val[V_ADAPT], 0, 100);
-        row_hl(4); print(4, row_y(4), OLED_FONT_SMALL, row_col(4), "< Back");
-    }
-    else if(page == PG_MOVE) {
-        print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "MOVEMENT");
-        row_hl(0); print(4, row_y(0), OLED_FONT_SMALL, row_col(0), "Slide"); mark_onoff(0, feat[F_SLIDE]);
-        row_hl(1); print(4, row_y(1), OLED_FONT_SMALL, row_col(1), "Bhop");  mark_onoff(1, feat[F_BHOP]);
-        row_hl(2); print(4, row_y(2), OLED_FONT_SMALL, row_col(2), "Snake"); mark_onoff(2, feat[F_SNAKE]);
-        row_hl(3); print(4, row_y(3), OLED_FONT_SMALL, row_col(3), "SC Delay"); mark_bar(3, val[V_SC_DELAY], 150, 400);
-        row_hl(4); print(4, row_y(4), OLED_FONT_SMALL, row_col(4), "SC Mode");  mark_mode(4, val[V_SC_MODE]);
-        /* row 5 (BH Time) and 6 (Back) shown when scrolled into view */
-        row_hl(5); print(4, row_y(5), OLED_FONT_SMALL, row_col(5), "BH Time");  mark_bar(5, val[V_BH_TIME], 25, 80);
-    }
-    else if(page == PG_SETTINGS) {
-        print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "SETTINGS");
-        row_hl(0); print(4, row_y(0), OLED_FONT_SMALL, row_col(0), "SN Speed"); mark_bar(0, val[V_SN_SPEED], 5, 25);
-        row_hl(1); print(4, row_y(1), OLED_FONT_SMALL, row_col(1), "SN Range"); mark_bar(1, val[V_SN_RANGE], 15, 60);
-        row_hl(2); print(4, row_y(2), OLED_FONT_SMALL, row_col(2), "Preset"); draw_preset(86, row_y(2), row_col(2));
-        row_hl(3); print(4, row_y(3), OLED_FONT_SMALL, row_col(3), "1ms Mode"); mark_onoff(3, val[V_ULTRA]);
-        row_hl(4); print(4, row_y(4), OLED_FONT_SMALL, row_col(4), "< Back");
+    int n = page_count();
+
+    /* header with scroll indicators */
+    if(page == PG_MAIN)     print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "MAIN MENU");
+    if(page == PG_RECOIL)   print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "ANTI-RECOIL");
+    if(page == PG_MOVE)     print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "MOVEMENT");
+    if(page == PG_SETTINGS) print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "SETTINGS");
+    draw_scroll_arrows(n);
+
+    /* render visible rows */
+    int i;
+    for(i = 0; i < n; i++) {
+        menu_row(i, row_col(i));
     }
 }
 
