@@ -1,12 +1,15 @@
 /* ===========================================================================
    BO7 PRO  -  Titan Two  -  GPC2
-   v12.0.0  "Foundation"
+   v12.1.0  "Recoil Engine"
 
-   A clean, single-dialect GPC2 rewrite. Verified against real Titan Two
-   scripts and the ConsoleTuner / community GPC references.
+   Enhanced anti-recoil with:
+     - Advanced dual-motor rumble analysis
+     - 8-frame pattern learning with trend detection
+     - 5-phase burst compensation with smooth transitions
+     - Acceleration tracking and consistency scoring
 
    FEATURES
-     1. Smart Anti-Recoil   (rumble-adaptive, no per-weapon tuning)
+     1. Smart Anti-Recoil   (rumble-adaptive, pattern-learning, multi-phase)
      2. Slide Cancel        (BO7 / Jump / Legacy modes)
      3. Bunny Hop           (hold-jump auto chain)
      4. Snake Movement      (evasive strafe while prone)
@@ -23,7 +26,7 @@
      Menu          : LT + MENU (no LB)   Nav=D-Pad  Adjust=L/R  Select=A  Back=B
    =========================================================================== */
 
-#pragma METAINFO("BO7 PRO", 12, 0, "BO7")
+#pragma METAINFO("BO7 PRO", 12, 1, "BO7")
 #include <xb1.gph>
 
 /* ----- tunable timing (ms) -------------------------------------------- */
@@ -89,8 +92,24 @@ int pset_lmg[3] = { 42, 3, 85 };
 
 /* runtime */
 bool firing, aiming;
-int  ar_t, ar_mult, ar_learn;
-int  r_hist[4], r_idx, r_prev;
+
+/* enhanced anti-recoil state */
+int  ar_t;              // time since firing started (ms)
+int  ar_mult;           // adaptive multiplier (100 = 1x)
+int  ar_learn;          // pattern learning bonus/penalty
+int  ar_phase;          // current burst phase (0-4)
+int  ar_smooth_v;       // smoothed vertical output
+int  ar_smooth_h;       // smoothed horizontal output
+int  ar_accel;          // acceleration (recoil trend)
+int  ar_consist;        // consistency score (0-100)
+
+/* 8-frame rumble history for deep pattern analysis */
+int  r_hist[8];
+int  r_idx;
+int  r_prev;
+int  r_delta[4];        // rate-of-change history
+int  d_idx;
+
 int  bh_t;
 int  sn_t, sn_dir;
 
@@ -110,9 +129,15 @@ init {
 
     vm_tctrl(val[V_ULTRA] ? VM_ULTRA : VM_NORMAL);
 
+    /* enhanced anti-recoil init */
     ar_t = 0; ar_mult = 100; ar_learn = 0;
-    r_idx = 0; r_prev = 0;
+    ar_phase = 0; ar_smooth_v = 0; ar_smooth_h = 0;
+    ar_accel = 0; ar_consist = 50;
+    r_idx = 0; r_prev = 0; d_idx = 0;
     r_hist[0] = 0; r_hist[1] = 0; r_hist[2] = 0; r_hist[3] = 0;
+    r_hist[4] = 0; r_hist[5] = 0; r_hist[6] = 0; r_hist[7] = 0;
+    r_delta[0] = 0; r_delta[1] = 0; r_delta[2] = 0; r_delta[3] = 0;
+
     bh_t = 0; sn_t = 0; sn_dir = 1;
 
     menu_open = FALSE; page = PG_MAIN; sel = 0;
@@ -156,7 +181,15 @@ main {
         recoil_tick();
     } else {
         ar_t = 0;
-        if(!firing) ar_learn = 0;
+        ar_phase = 0;
+        if(!firing) {
+            /* full reset when not firing */
+            ar_learn = 0;
+            ar_smooth_v = 0;
+            ar_smooth_h = 0;
+            ar_accel = 0;
+            ar_consist = 50;
+        }
     }
 
     /* ---- 2. slide cancel ---- */
@@ -226,51 +259,145 @@ void preset_set(int p) {
 }
 
 /* ===========================================================================
-   ANTI-RECOIL  (rumble-adaptive + pattern learning)
+   ANTI-RECOIL ENGINE v2.0
+
+   Three integrated methods:
+   1. Advanced Rumble Analysis  - dual-motor weighted blend, weapon detection
+   2. Deep Pattern Learning     - 8-frame history, trend/acceleration tracking
+   3. 5-Phase Burst Compensation - smooth phase transitions per spray stage
    =========================================================================== */
 
 void recoil_tick() {
-    int ra = get_rumble(RUMBLE_A);
-    int rb = get_rumble(RUMBLE_B);
-    int r  = rb;
-    if(ra > rb && ra < 100) r = ra;
+    /* === METHOD 1: ADVANCED RUMBLE ANALYSIS === */
+    int ra = get_rumble(RUMBLE_A);  // haptic motor (environment/impacts)
+    int rb = get_rumble(RUMBLE_B);  // main motor (weapon fire)
 
-    /* pattern learning : reward consistent rumble, ease off erratic */
-    if(abs(r - r_prev) > 4) {
-        r_hist[r_idx] = r;
-        r_idx = (r_idx + 1) % 4;
-        int avg = (r_hist[0] + r_hist[1] + r_hist[2] + r_hist[3]) / 4;
-        int var = abs(r_hist[0]-avg) + abs(r_hist[1]-avg)
-                + abs(r_hist[2]-avg) + abs(r_hist[3]-avg);
-        if(var < 18)      ar_learn = imin(ar_learn + 2, 12);
-        else if(var > 50) ar_learn = imax(ar_learn - 1, -4);
+    /* dual-motor weighted blend: rb primary, ra secondary for weapon detection */
+    int r;
+    if(rb > 8 && rb < 95) {
+        r = rb;
+        /* blend in ra if it's also active (heavy weapon signature) */
+        if(ra > 15 && ra < 90) r = (rb * 3 + ra) / 4;
+    } else if(ra > 12 && ra < 95) {
+        r = ra;
+    } else {
+        r = 0;
     }
+
+    /* rate-of-change tracking for acceleration detection */
+    int delta = r - r_prev;
+    r_delta[d_idx] = delta;
+    d_idx = (d_idx + 1) % 4;
+
+    /* === METHOD 2: DEEP PATTERN LEARNING (8-frame) === */
+    r_hist[r_idx] = r;
+    r_idx = (r_idx + 1) % 8;
+
+    /* weighted average (recent frames count more) */
+    int avg = (r_hist[0] + r_hist[1] + r_hist[2] + r_hist[3] +
+               r_hist[4]*2 + r_hist[5]*2 + r_hist[6]*3 + r_hist[7]*3) / 14;
+
+    /* variance calculation for consistency scoring */
+    int var = abs(r_hist[0]-avg) + abs(r_hist[1]-avg) + abs(r_hist[2]-avg) +
+              abs(r_hist[3]-avg) + abs(r_hist[4]-avg) + abs(r_hist[5]-avg) +
+              abs(r_hist[6]-avg) + abs(r_hist[7]-avg);
+
+    /* consistency score: low variance = high consistency */
+    if(var < 24)       ar_consist = imin(ar_consist + 3, 100);
+    else if(var > 80)  ar_consist = imax(ar_consist - 2, 20);
+    else               ar_consist = 50 + (80 - var) / 2;
+
+    /* acceleration tracking (is recoil ramping up or down?) */
+    ar_accel = (r_delta[0] + r_delta[1] + r_delta[2] + r_delta[3]) / 4;
+
+    /* pattern learning bonus: reward consistency, account for acceleration */
+    if(ar_consist > 75) {
+        ar_learn = imin(ar_learn + 2, 15);
+    } else if(ar_consist < 35) {
+        ar_learn = imax(ar_learn - 1, -6);
+    }
+    /* accelerating recoil = add pull; decelerating = reduce */
+    if(ar_accel > 5)       ar_learn = imin(ar_learn + 1, 15);
+    else if(ar_accel < -5) ar_learn = imax(ar_learn - 1, -6);
+
     r_prev = r;
 
-    /* adaptive multiplier from rumble intensity */
-    if(r > 12 && r < 95) {
-        if(r > 50)      ar_mult = 100 + ((r - 50) * val[V_ADAPT] / 25);
-        else if(r > 30) ar_mult = 90  + ((r - 30) * val[V_ADAPT] / 40);
-        else            ar_mult = 80  + ((r - 12) * val[V_ADAPT] / 70);
+    /* === ADAPTIVE MULTIPLIER FROM RUMBLE INTENSITY === */
+    if(r > 8 && r < 95) {
+        /* 4-tier intensity scaling */
+        if(r > 65)       ar_mult = 110 + ((r - 65) * val[V_ADAPT] / 20);  // heavy weapons
+        else if(r > 45)  ar_mult = 100 + ((r - 45) * val[V_ADAPT] / 35);  // assault rifles
+        else if(r > 25)  ar_mult = 90  + ((r - 25) * val[V_ADAPT] / 50);  // SMGs
+        else             ar_mult = 80  + ((r -  8) * val[V_ADAPT] / 85);  // pistols/tap
     } else {
         ar_mult = 100;
     }
 
-    int vs = (val[V_VERT] * ar_mult) / 100 + ar_learn;
+    /* base compensation values */
+    int vs = (val[V_VERT] * ar_mult) / 100;
     int hs = (val[V_HORIZ] * ar_mult) / 100;
 
-    /* 3-phase burst compensation */
-    if(r > 8 && r < 95) {
+    /* apply pattern learning bonus */
+    vs = vs + ar_learn;
+
+    /* === METHOD 3: 5-PHASE BURST COMPENSATION === */
+    if(r > 8) {
         ar_t += get_rtime();
-        if(ar_t < 120)      vs = vs * 2 + (r / 3);
-        else if(ar_t < 500) vs = vs + (r / 4);
-        else                vs = vs + (r / 5);
+
+        /* phase transitions with smooth blending */
+        int phase_mult;
+        if(ar_t < 80) {
+            /* Phase 0: Initial kick (first 2-3 shots) - strongest pull */
+            ar_phase = 0;
+            phase_mult = 180 + (r / 2);
+        }
+        else if(ar_t < 200) {
+            /* Phase 1: Ramp-up (shots 4-6) - building recoil */
+            ar_phase = 1;
+            int blend = (ar_t - 80) * 100 / 120;  // 0->100 over phase
+            phase_mult = 180 - (blend * 50 / 100) + (r / 3);  // 180->130
+        }
+        else if(ar_t < 600) {
+            /* Phase 2: Sustained fire - steady compensation */
+            ar_phase = 2;
+            phase_mult = 120 + (r / 4) + (ar_consist / 10);
+        }
+        else if(ar_t < 1200) {
+            /* Phase 3: Fatigue - recoil pattern stabilizes */
+            ar_phase = 3;
+            phase_mult = 110 + (r / 5);
+        }
+        else {
+            /* Phase 4: Extended spray - minimal adjustment */
+            ar_phase = 4;
+            phase_mult = 100 + (r / 6);
+        }
+
+        vs = (vs * phase_mult) / 100;
+
+        /* horizontal drift compensation scales with phase */
+        if(ar_phase < 2) hs = hs * 120 / 100;
+
     } else {
         ar_t = 0;
+        ar_phase = 0;
     }
 
-    set_val(XB1_RY, get_val(XB1_RY) + vs);
-    if(hs != 0) set_val(XB1_RX, get_val(XB1_RX) + hs);
+    /* === OUTPUT SMOOTHING === */
+    /* exponential smoothing to prevent jerky corrections */
+    ar_smooth_v = (ar_smooth_v * 2 + vs) / 3;
+    ar_smooth_h = (ar_smooth_h * 2 + hs) / 3;
+
+    /* ADS intensity scaling (stronger when ADS) */
+    int lt = get_val(XB1_LT);
+    int ads_scale = 80 + (lt * 20 / 100);  // 80-100% based on trigger depth
+
+    int final_v = (ar_smooth_v * ads_scale) / 100;
+    int final_h = (ar_smooth_h * ads_scale) / 100;
+
+    /* apply final compensation */
+    set_val(XB1_RY, get_val(XB1_RY) + final_v);
+    if(final_h != 0) set_val(XB1_RX, get_val(XB1_RX) + final_h);
 }
 
 /* ===========================================================================
@@ -419,8 +546,8 @@ void oled_boot() {
     cls_oled(OLED_BLACK);
     rect_oled(0, 0, SCR_W - 1, 63, 0, OLED_WHITE);
     print(34, 14, OLED_FONT_MEDIUM, OLED_WHITE, "BO7 PRO");
-    print(46, 34, OLED_FONT_SMALL,  OLED_WHITE, "v12.0");
-    print(20, 48, OLED_FONT_SMALL,  OLED_WHITE, "FOUNDATION");
+    print(46, 34, OLED_FONT_SMALL,  OLED_WHITE, "v12.1");
+    print(14, 48, OLED_FONT_SMALL,  OLED_WHITE, "RECOIL ENGINE");
 }
 
 void oled_status() {

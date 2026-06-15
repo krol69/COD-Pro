@@ -2,6 +2,38 @@
 
 All notable changes to **BO7 PRO** (Titan Two GPC script).
 
+## v12.1.0 — "Recoil Engine" (2026-06-15)
+
+Major anti-recoil system upgrade implementing three best-in-class methods.
+
+### New: Advanced Rumble Analysis
+- Dual-motor weighted blend (RUMBLE_B primary for weapon fire, RUMBLE_A secondary)
+- 4-tier intensity scaling: pistol/tap → SMG → AR → LMG automatic detection
+- Rate-of-change tracking for first-shot kick detection
+
+### New: Deep Pattern Learning (8-frame)
+- Expanded history buffer from 4 to 8 frames
+- Weighted averaging (recent frames count 3x more)
+- Variance-based consistency scoring (0-100)
+- Acceleration tracking detects ramping vs stabilizing recoil
+- Smarter learning bonus: +15 max for consistent patterns, -6 for erratic
+
+### New: 5-Phase Burst Compensation
+- **Phase 0** (0-80ms): Initial kick — 180% pull + rumble bonus
+- **Phase 1** (80-200ms): Ramp-up — smooth blend 180%→130%
+- **Phase 2** (200-600ms): Sustained — 120% + consistency bonus
+- **Phase 3** (600-1200ms): Fatigue — 110% stabilized pull
+- **Phase 4** (1200ms+): Extended spray — minimal 100% baseline
+- Horizontal drift gets 120% in early phases
+
+### Improved
+- Output smoothing: exponential filter prevents jerky corrections
+- ADS-scaled intensity: 80-100% based on trigger depth
+- Better state reset between bursts
+- New runtime variables for phase/consistency/acceleration tracking
+
+---
+
 ## v12.0.0 — "Foundation" (2026-06-15)
 
 A ground-up correctness pass. Earlier versions mixed two different Titan Two
