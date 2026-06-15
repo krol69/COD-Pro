@@ -19,6 +19,17 @@ Real-time OLED display while firing (toggle: Settings → Live HUD):
 
 See the anti-recoil engine working and tune settings with immediate feedback.
 
+### New: Quick-Tune (mid-game adjustment)
+- **LT + RS + D-pad Up/Down**: adjust Vertical +/-5
+- **LT + RS + D-pad Left/Right**: adjust Adaptive +/-10
+- Visual bar splash with tick marks at 25/50/75
+- No menu needed — tune on the fly, settings auto-save
+
+### Movement Feel Pass
+- SlideBO7: explicit B release + brief crouch tap after jump for momentum reset
+- SlideLegacy: GAP between slide and jump for cleaner state
+- Bhop: tighter timing (10ms release, 16ms press) for snappier chains
+
 ### Hardening
 - Phase-0 moderated 180%→150% to prevent first-shot aim slam
 - Safety clamps: vertical [0,95], horizontal [-70,70], final output [-100,100]
