@@ -232,7 +232,8 @@ main {
    =========================================================================== */
 
 void quick_toggles() {
-    /* quick-tune: LT + RS + D-pad Up/Down = adjust Vertical on the fly */
+    /* quick-tune: LT + RS + D-pad = adjust Vertical/Adaptive on the fly
+       Up/Down = Vertical (+/-5)    Left/Right = Adaptive (+/-10) */
     if(aiming && get_val(XB1_RS) > 50) {
         if(event_press(XB1_UP)) {
             val[V_VERT] = iclamp(val[V_VERT] + 5, 0, 100);
@@ -244,8 +245,19 @@ void quick_toggles() {
             dirty = TRUE; combo_run(LedAdjust);
             splash_vert();
         }
+        if(event_press(XB1_RIGHT)) {
+            val[V_ADAPT] = iclamp(val[V_ADAPT] + 10, 0, 100);
+            dirty = TRUE; combo_run(LedAdjust);
+            splash_adapt();
+        }
+        if(event_press(XB1_LEFT)) {
+            val[V_ADAPT] = iclamp(val[V_ADAPT] - 10, 0, 100);
+            dirty = TRUE; combo_run(LedAdjust);
+            splash_adapt();
+        }
         /* block the D-pad from normal gameplay when quick-tuning */
         set_val(XB1_UP, 0); set_val(XB1_DOWN, 0);
+        set_val(XB1_LEFT, 0); set_val(XB1_RIGHT, 0);
     }
 
     if(aiming && event_press(XB1_XBOX)) {
@@ -784,6 +796,21 @@ void splash_vert() {
     int bx = 14; int bw = 100; int bh = 12;
     int by = 32;
     int fill = iclamp(val[V_VERT], 0, 100);
+    rect_oled(bx, by, bw, bh, 0, OLED_WHITE);
+    if(fill > 0) rect_oled(bx, by, fill, bh, 1, OLED_WHITE);
+    /* tick marks at 25, 50, 75 */
+    line_oled(bx + 25, by - 2, bx + 25, by + bh + 1, OLED_WHITE);
+    line_oled(bx + 50, by - 2, bx + 50, by + bh + 1, OLED_WHITE);
+    line_oled(bx + 75, by - 2, bx + 75, by + bh + 1, OLED_WHITE);
+}
+
+void splash_adapt() {
+    cls_oled(OLED_BLACK);
+    print(18, 10, OLED_FONT_MEDIUM, OLED_WHITE, "ADAPTIVE");
+    /* draw a bar showing 0-100 range */
+    int bx = 14; int bw = 100; int bh = 12;
+    int by = 32;
+    int fill = iclamp(val[V_ADAPT], 0, 100);
     rect_oled(bx, by, bw, bh, 0, OLED_WHITE);
     if(fill > 0) rect_oled(bx, by, fill, bh, 1, OLED_WHITE);
     /* tick marks at 25, 50, 75 */
