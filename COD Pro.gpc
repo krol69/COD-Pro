@@ -298,14 +298,14 @@ void recoil_tick() {
                r_hist[4]*2 + r_hist[5]*2 + r_hist[6]*3 + r_hist[7]*3) / 14;
 
     /* variance calculation for consistency scoring */
-    int var = abs(r_hist[0]-avg) + abs(r_hist[1]-avg) + abs(r_hist[2]-avg) +
-              abs(r_hist[3]-avg) + abs(r_hist[4]-avg) + abs(r_hist[5]-avg) +
-              abs(r_hist[6]-avg) + abs(r_hist[7]-avg);
+    int rvar = abs(r_hist[0]-avg) + abs(r_hist[1]-avg) + abs(r_hist[2]-avg) +
+               abs(r_hist[3]-avg) + abs(r_hist[4]-avg) + abs(r_hist[5]-avg) +
+               abs(r_hist[6]-avg) + abs(r_hist[7]-avg);
 
     /* consistency score: low variance = high consistency */
-    if(var < 24)       ar_consist = imin(ar_consist + 3, 100);
-    else if(var > 80)  ar_consist = imax(ar_consist - 2, 20);
-    else               ar_consist = 50 + (80 - var) / 2;
+    if(rvar < 24)       ar_consist = imin(ar_consist + 3, 100);
+    else if(rvar > 80)  ar_consist = imax(ar_consist - 2, 20);
+    else                ar_consist = 50 + (80 - rvar) / 2;
 
     /* acceleration tracking (is recoil ramping up or down?) */
     ar_accel = (r_delta[0] + r_delta[1] + r_delta[2] + r_delta[3]) / 4;
@@ -345,17 +345,18 @@ void recoil_tick() {
         ar_t += get_rtime();
 
         /* phase transitions with smooth blending */
-        int phase_mult;
+        int phase_mult = 100;
+        int blend = 0;
         if(ar_t < 80) {
             /* Phase 0: Initial kick (first 2-3 shots) - strongest pull */
             ar_phase = 0;
-            phase_mult = 180 + (r / 2);
+            phase_mult = 150 + (r / 3);
         }
         else if(ar_t < 200) {
             /* Phase 1: Ramp-up (shots 4-6) - building recoil */
             ar_phase = 1;
-            int blend = (ar_t - 80) * 100 / 120;  // 0->100 over phase
-            phase_mult = 180 - (blend * 50 / 100) + (r / 3);  // 180->130
+            blend = (ar_t - 80) * 100 / 120;  // 0->100 over phase
+            phase_mult = 150 - (blend * 25 / 100) + (r / 4);  // 150->125
         }
         else if(ar_t < 600) {
             /* Phase 2: Sustained fire - steady compensation */
@@ -383,6 +384,11 @@ void recoil_tick() {
         ar_phase = 0;
     }
 
+    /* safety clamp: keep pull controllable so the stick never saturates
+       and the player retains aim authority */
+    vs = iclamp(vs, 0, 95);
+    hs = iclamp(hs, -70, 70);
+
     /* === OUTPUT SMOOTHING === */
     /* exponential smoothing to prevent jerky corrections */
     ar_smooth_v = (ar_smooth_v * 2 + vs) / 3;
@@ -395,9 +401,9 @@ void recoil_tick() {
     int final_v = (ar_smooth_v * ads_scale) / 100;
     int final_h = (ar_smooth_h * ads_scale) / 100;
 
-    /* apply final compensation */
-    set_val(XB1_RY, get_val(XB1_RY) + final_v);
-    if(final_h != 0) set_val(XB1_RX, get_val(XB1_RX) + final_h);
+    /* apply final compensation (additive over player input, clamped) */
+    set_val(XB1_RY, iclamp(get_val(XB1_RY) + final_v, -100, 100));
+    if(final_h != 0) set_val(XB1_RX, iclamp(get_val(XB1_RX) + final_h, -100, 100));
 }
 
 /* ===========================================================================
