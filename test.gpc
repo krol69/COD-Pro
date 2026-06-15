@@ -1,0 +1,30 @@
+/* DIAGNOSTIC - tests which GPC2 primitives this compiler accepts.
+   Compile with F7 and report which lines error (if any). */
+
+#pragma METAINFO("TEST", 1, 0, "TEST")
+#include <xb1.gph>
+
+int prev_b;
+
+main {
+    /* A: timing - does elapsed_time() exist? */
+    int t = elapsed_time();
+
+    /* B: force feedback read - does ffb_get(FFB_1) exist? returns fix32 */
+    fix32 rum = ffb_get(FFB_1);
+
+    /* C: convert fix32 to int - which works? */
+    int ri = (int)rum;
+
+    /* D: previous value for edge detection - does get_lval exist? */
+    int lb = get_lval(XB1_B);
+
+    /* E: manual press edge (emulated event_press) */
+    if(get_val(XB1_B) && !lb) prev_b = 1;
+
+    /* F: led_set with float brightness */
+    led_set(LED_1, 100.0, 0);
+
+    /* G: basic output */
+    set_val(XB1_RY, get_val(XB1_RY) + 10);
+}
