@@ -879,33 +879,42 @@ int imax(int a, int b) { if(a > b) return a; return b; }
    =========================================================================== */
 
 combo SlideBO7 {
+    /* slide → delay → ADS cancel → jump → brief crouch for momentum reset */
     set_val(XB1_B, 100); wait(TAP);
+    set_val(XB1_B, 0);
     wait(val[V_SC_DELAY]);
     set_val(XB1_LT, 100); wait(TAP);
     set_val(XB1_LT, 0);   wait(GAP);
     set_val(XB1_A, 100);  wait(TAP);
-    set_val(XB1_A, 0);
+    set_val(XB1_A, 0);    wait(30);
+    set_val(XB1_B, 100);  wait(20);  // brief crouch tap for clean reset
+    set_val(XB1_B, 0);
 }
 
 combo SlideJump {
+    /* slide → delay → jump out */
     set_val(XB1_B, 100); wait(TAP);
+    set_val(XB1_B, 0);
     wait(val[V_SC_DELAY]);
     set_val(XB1_A, 100); wait(TAP);
     set_val(XB1_A, 0);
 }
 
 combo SlideLegacy {
+    /* slide → delay → second slide → jump (double-slide cancel) */
     set_val(XB1_B, 100); wait(TAP);
     set_val(XB1_B, 0);
     wait(val[V_SC_DELAY]);
     set_val(XB1_B, 100); wait(TAP);
+    set_val(XB1_B, 0);   wait(GAP);
     set_val(XB1_A, 100); wait(TAP);
     set_val(XB1_A, 0);
 }
 
 combo Bhop {
-    set_val(XB1_A, 0); wait(TAP);
-    set_val(XB1_A, 100); wait(TAP);
+    /* brief release then re-press for consistent chain jumps */
+    set_val(XB1_A, 0);   wait(10);
+    set_val(XB1_A, 100); wait(16);
 }
 
 combo LedOn     { led_green(); wait(140); led_white(); }
