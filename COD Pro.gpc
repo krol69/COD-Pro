@@ -1,6 +1,6 @@
 /* ===========================================================================
    BO7 PRO  -  Titan Two  -  GPC2
-   v12.1.0  "Recoil Engine"
+   v12.2.0  "Live Tuning"
 
    Enhanced anti-recoil with:
      - Advanced dual-motor rumble analysis
@@ -15,13 +15,11 @@
      4. Snake Movement      (evasive strafe while prone)
      + OLED menu, weapon presets, persistent settings, LED feedback
 
-   PLATFORM NOTE
-     This file targets Xbox identifiers via <xb1.gph>. For PlayStation,
-     change the include to <ps5.gph> (or <ps4.gph>) and the XB1_* names
-     to PS5_*/PS4_* equivalents. See README for the mapping.
+   PLATFORM: Xbox (xb1.gph). For PlayStation, see README for button mapping.
 
    CONTROLS  (see README for full layout)
      Quick toggles : LT+XBOX recoil | LB+RB slide | LB+VIEW bhop | LB+MENU snake
+     Quick-tune    : LT+RS+D-pad adjusts Vertical/Adaptive on the fly
      Presets       : LT + D-Pad  (UP=AR RIGHT=SMG DOWN=LMG LEFT=Custom)
      Menu          : LT + MENU (no LB)   Nav=D-Pad  Adjust=L/R  Select=A  Back=B
    =========================================================================== */
