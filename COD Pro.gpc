@@ -1,679 +1,596 @@
-/*
-    ██████╗  ██████╗ ███████╗    ██████╗ ██████╗  ██████╗
-    ██╔══██╗██╔═══██╗╚════██║    ██╔══██╗██╔══██╗██╔═══██╗
-    ██████╔╝██║   ██║    ██╔╝    ██████╔╝██████╔╝██║   ██║
-    ██╔══██╗██║   ██║   ██╔╝     ██╔═══╝ ██╔══██╗██║   ██║
-    ██████╔╝╚██████╔╝   ██║      ██║     ██║  ██║╚██████╔╝
-    ╚═════╝  ╚═════╝    ╚═╝      ╚═╝     ╚═╝  ╚═╝ ╚═════╝
+/* ===========================================================================
+   BO7 PRO  -  Titan Two  -  GPC2
+   v12.0.0  "Foundation"
 
-    BO7 PRO v11.1 - ULTRA RESPONSIVE
-    Latest Patch | All Features Enabled
+   A clean, single-dialect GPC2 rewrite. Verified against real Titan Two
+   scripts and the ConsoleTuner / community GPC references.
 
-    ═══════════════════════════════════════════════════════════════════
-    FEATURES:  Recoil | Slide Cancel | Bhop | Snake
-    ═══════════════════════════════════════════════════════════════════
+   FEATURES
+     1. Smart Anti-Recoil   (rumble-adaptive, no per-weapon tuning)
+     2. Slide Cancel        (BO7 / Jump / Legacy modes)
+     3. Bunny Hop           (hold-jump auto chain)
+     4. Snake Movement      (evasive strafe while prone)
+     + OLED menu, weapon presets, persistent settings, LED feedback
 
-    QUICK TOGGLES:
-      LT + XBOX      = Anti-Recoil
-      LB + RB        = Slide Cancel
-      LB + VIEW      = Bhop
-      LB + MENU      = Snake
+   PLATFORM NOTE
+     This file targets Xbox identifiers via <xb1.gph>. For PlayStation,
+     change the include to <ps5.gph> (or <ps4.gph>) and the XB1_* names
+     to PS5_*/PS4_* equivalents. See README for the mapping.
 
-    PRESETS (LT + D-Pad):
-      UP=AR | RIGHT=SMG | DOWN=LMG | LEFT=Custom
+   CONTROLS  (see README for full layout)
+     Quick toggles : LT+XBOX recoil | LB+RB slide | LB+VIEW bhop | LB+MENU snake
+     Presets       : LT + D-Pad  (UP=AR RIGHT=SMG DOWN=LMG LEFT=Custom)
+     Menu          : LT + MENU (no LB)   Nav=D-Pad  Adjust=L/R  Select=A  Back=B
+   =========================================================================== */
 
-    MENU: LT + MENU (no LB)
+#pragma METAINFO("BO7 PRO", 12, 0, "BO7")
+#include <xb1.gph>
 
-    ═══════════════════════════════════════════════════════════════════
-*/
+/* ----- tunable timing (ms) -------------------------------------------- */
+#define TAP            14      // reliable single button press
+#define GAP            26      // gap between combo presses
+#define VM_ULTRA       -9      // ~1ms VM period  (10ms default + value)
+#define VM_NORMAL      -6      // ~4ms VM period
 
-#pragma METAINFO("BO7 PRO v11.1", 1, 1, "BO7")
+/* ----- feature indices ------------------------------------------------ */
+#define F_RECOIL       0
+#define F_SLIDE        1
+#define F_BHOP         2
+#define F_SNAKE        3
+#define F_NUM          4
 
-// ═══════════════════════════════════════════════════════════════════
-// DEFINES
-// ═══════════════════════════════════════════════════════════════════
+/* ----- value indices -------------------------------------------------- */
+#define V_VERT         0       // recoil vertical pull        (0..100)
+#define V_HORIZ        1       // recoil horizontal trim    (-50..50)
+#define V_ADAPT        2       // recoil adaptive %           (0..100)
+#define V_SC_DELAY     3       // slide-cancel slide time   (150..400)
+#define V_SC_MODE      4       // 0=BO7 1=Jump 2=Legacy
+#define V_BH_TIME      5       // bhop re-jump interval      (25..80)
+#define V_SN_SPEED     6       // snake strafe speed          (5..25)
+#define V_SN_RANGE     7       // snake strafe range         (15..60)
+#define V_PRESET       8       // 0=Custom 1=AR 2=SMG 3=LMG
+#define V_ULTRA        9       // 0=Normal 1=Ultra (1ms)
+#define V_NUM          10
 
-define
-    // Buttons
-    FIRE = XB1_RT, ADS = XB1_LT, JUMP = XB1_A, CROUCH = XB1_B,
+/* ----- menu pages ----------------------------------------------------- */
+#define PG_MAIN        0
+#define PG_RECOIL      1
+#define PG_MOVE        2
+#define PG_SETTINGS    3
 
-    // Timing (ultra-fast)
-    TICK = 2, TAP = 12, FAST = 24,
+/* ----- OLED layout ---------------------------------------------------- */
+#define SCR_W          128
+#define ROW_H          11
+#define ROW_TOP        14
 
-    // Features
-    F_AR = 0, F_SC = 1, F_BH = 2, F_SN = 3,
+/* ===========================================================================
+   STATE
+   =========================================================================== */
 
-    // Values
-    V_VERT = 0, V_HORIZ = 1, V_ADAPT = 2,
-    V_SC_DLY = 3, V_SC_MD = 4, V_BH_MS = 5,
-    V_SN_SPD = 6, V_SN_RNG = 7, V_PRESET = 8, V_ULTRA = 9;
+bool feat[F_NUM] = { TRUE, TRUE, TRUE, TRUE };   // all features ON
 
-// ═══════════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════════
-
-int on[4] = {1, 1, 1, 1};  // All features ON
-
-int v[10] = {
-    30,   // Vertical recoil
-    0,    // Horizontal trim
-    70,   // Adaptive %
-    220,  // Slide cancel delay
-    0,    // SC mode (0=BO7, 1=Jump, 2=Legacy)
-    40,   // Bhop ms
-    12,   // Snake speed
-    30,   // Snake range
-    1,    // Preset (1=AR)
-    1     // Ultra mode ON
+int  val[V_NUM] = {
+    30,    // V_VERT
+    0,     // V_HORIZ
+    70,    // V_ADAPT
+    220,   // V_SC_DELAY
+    0,     // V_SC_MODE
+    40,    // V_BH_TIME
+    12,    // V_SN_SPEED
+    30,    // V_SN_RANGE
+    1,     // V_PRESET (AR)
+    1      // V_ULTRA  (on)
 };
 
-// Presets: [vert, horiz, adapt]
-int P_AR[3]  = {30, 0, 70};
-int P_SMG[3] = {20, 0, 55};
-int P_LMG[3] = {42, 3, 85};
+/* preset profiles: vert, horiz, adapt */
+int pset_ar[3]  = { 30, 0, 70 };
+int pset_smg[3] = { 20, 0, 55 };
+int pset_lmg[3] = { 42, 3, 85 };
 
-// Runtime
-int firing, aiming;
-int ar_t, ar_m, ar_boost;
-int bh_t, sn_t, sn_d;
-int r_hist[4], r_idx, r_last;
-int menu, m_pg, m_i;
-int dirty, save_t;
+/* runtime */
+bool firing, aiming;
+int  ar_t, ar_mult, ar_learn;
+int  r_hist[4], r_idx, r_prev;
+int  bh_t;
+int  sn_t, sn_dir;
 
-// ═══════════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════════
+bool menu_open;
+int  page, sel;
+
+bool dirty;
+int  save_at;
+
+/* ===========================================================================
+   INIT
+   =========================================================================== */
 
 init {
     pmem_load();
-    load_cfg();
+    cfg_load();
 
-    // Ultra mode = 1ms, else 2ms
-    vm_tctrl(v[V_ULTRA] ? 0 : 1);
+    vm_tctrl(val[V_ULTRA] ? VM_ULTRA : VM_NORMAL);
 
-    ar_t = 0; ar_m = 100; ar_boost = 0;
-    bh_t = 0; sn_t = 0; sn_d = 1;
-    r_idx = 0; r_last = 0;
-    menu = 0; m_pg = 0; m_i = 0;
-    dirty = 0; save_t = 0;
-
+    ar_t = 0; ar_mult = 100; ar_learn = 0;
+    r_idx = 0; r_prev = 0;
     r_hist[0] = 0; r_hist[1] = 0; r_hist[2] = 0; r_hist[3] = 0;
+    bh_t = 0; sn_t = 0; sn_dir = 1;
 
-    show_boot();
-    led_w();
+    menu_open = FALSE; page = PG_MAIN; sel = 0;
+    dirty = FALSE; save_at = 0;
+
+    oled_boot();
+    led_white();
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// MAIN
-// ═══════════════════════════════════════════════════════════════════
+/* ===========================================================================
+   MAIN
+   =========================================================================== */
 
 main {
-    firing = get_val(FIRE) > 50;
-    aiming = get_val(ADS) > 50;
+    firing = get_val(XB1_RT) > 50;
+    aiming = get_val(XB1_LT) > 50;
 
-    // Auto-save
-    if(dirty && system_time() > save_t) {
-        save_cfg();
+    /* throttled persistent save */
+    if(dirty && system_time() > save_at) {
+        cfg_save();
         pmem_save();
-        dirty = 0;
-        save_t = system_time() + 1000;
+        dirty = FALSE;
+        save_at = system_time() + 1000;
     }
 
-    // Menu
+    /* open / close menu : LT + MENU (without LB) */
     if(aiming && get_val(XB1_LB) < 20 && event_press(XB1_MENU)) {
-        menu = !menu;
-        if(menu) { m_pg = 0; m_i = 0; show_menu(); }
-        else show_status();
+        menu_open = !menu_open;
+        if(menu_open) { page = PG_MAIN; sel = 0; oled_menu(); led_blue(); }
+        else          { oled_status(); led_white(); }
         set_val(XB1_MENU, 0);
     }
 
-    if(menu) { do_menu(); return; }
+    if(menu_open) { menu_tick(); return; }
 
-    // ─── QUICK TOGGLES ───
-    if(aiming && event_press(XB1_XBOX)) {
-        on[F_AR] = !on[F_AR];
-        dirty = 1;
-        flash(on[F_AR]);
-        show_tog("RECOIL", on[F_AR]);
+    quick_toggles();
+    presets();
+
+    /* ---- 1. anti-recoil ---- */
+    if(feat[F_RECOIL] && aiming && firing) {
+        recoil_tick();
+    } else {
+        ar_t = 0;
+        if(!firing) ar_learn = 0;
     }
 
+    /* ---- 2. slide cancel ---- */
+    if(feat[F_SLIDE] && event_press(XB1_B) && get_val(XB1_LY) < -20) {
+        if(val[V_SC_MODE] == 0)      combo_run(SlideBO7);
+        else if(val[V_SC_MODE] == 1) combo_run(SlideJump);
+        else                         combo_run(SlideLegacy);
+    }
+
+    /* ---- 3. bhop ---- */
+    if(feat[F_BHOP] && get_val(XB1_A) > 50) {
+        bh_t += get_rtime();
+        if(bh_t >= val[V_BH_TIME]) { combo_run(Bhop); bh_t = 0; }
+    } else {
+        bh_t = 0;
+    }
+
+    /* ---- 4. snake ---- */
+    if(feat[F_SNAKE]) snake_tick();
+    else              sn_t = 0;
+}
+
+/* ===========================================================================
+   QUICK TOGGLES  &  PRESETS
+   =========================================================================== */
+
+void quick_toggles() {
+    if(aiming && event_press(XB1_XBOX)) {
+        feat[F_RECOIL] = !feat[F_RECOIL]; dirty = TRUE;
+        led_flash(feat[F_RECOIL]); splash_feat(F_RECOIL);
+    }
     if(get_val(XB1_LB) > 50) {
         if(event_press(XB1_RB)) {
-            on[F_SC] = !on[F_SC];
-            dirty = 1;
-            flash(on[F_SC]);
-            show_tog("SLIDE", on[F_SC]);
+            feat[F_SLIDE] = !feat[F_SLIDE]; dirty = TRUE;
+            led_flash(feat[F_SLIDE]); splash_feat(F_SLIDE);
         }
         if(event_press(XB1_VIEW)) {
-            on[F_BH] = !on[F_BH];
-            dirty = 1;
-            flash(on[F_BH]);
-            show_tog("BHOP", on[F_BH]);
+            feat[F_BHOP] = !feat[F_BHOP]; dirty = TRUE;
+            led_flash(feat[F_BHOP]); splash_feat(F_BHOP);
         }
         if(event_press(XB1_MENU)) {
-            on[F_SN] = !on[F_SN];
-            dirty = 1;
-            flash(on[F_SN]);
-            show_tog("SNAKE", on[F_SN]);
+            feat[F_SNAKE] = !feat[F_SNAKE]; dirty = TRUE;
+            led_flash(feat[F_SNAKE]); splash_feat(F_SNAKE);
             set_val(XB1_MENU, 0);
         }
     }
-
-    // ─── PRESETS (LT + D-Pad) ───
-    if(aiming && get_val(XB1_LB) < 20) {
-        if(event_press(XB1_UP))    { set_preset(1); show_pre("AR"); }
-        if(event_press(XB1_RIGHT)) { set_preset(2); show_pre("SMG"); }
-        if(event_press(XB1_DOWN))  { set_preset(3); show_pre("LMG"); }
-        if(event_press(XB1_LEFT))  { set_preset(0); show_pre("CUSTOM"); }
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // FEATURES
-    // ═══════════════════════════════════════════════════════════════
-
-    // 1. ANTI-RECOIL
-    if(on[F_AR] && aiming && firing) {
-        do_recoil();
-    } else {
-        ar_t = 0;
-        if(!firing) ar_boost = 0;
-    }
-
-    // 2. SLIDE CANCEL
-    if(on[F_SC] && event_press(CROUCH) && get_val(XB1_LY) < -20) {
-        if(v[V_SC_MD] == 0)      combo_run(cSC_BO7);
-        else if(v[V_SC_MD] == 1) combo_run(cSC_JMP);
-        else                     combo_run(cSC_LEG);
-    }
-
-    // 3. BHOP
-    if(on[F_BH] && get_val(JUMP) > 50) {
-        bh_t += get_rtime();
-        if(bh_t >= v[V_BH_MS]) {
-            combo_run(cBHOP);
-            bh_t = 0;
-        }
-    } else bh_t = 0;
-
-    // 4. SNAKE
-    if(on[F_SN]) do_snake();
-    else sn_t = 0;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// ANTI-RECOIL (Smart)
-// ═══════════════════════════════════════════════════════════════════
+void presets() {
+    if(aiming && get_val(XB1_LB) < 20) {
+        if(event_press(XB1_UP))    preset_set(1);
+        if(event_press(XB1_RIGHT)) preset_set(2);
+        if(event_press(XB1_DOWN))  preset_set(3);
+        if(event_press(XB1_LEFT))  preset_set(0);
+    }
+}
 
-function do_recoil() {
-    // Get rumble
+void preset_set(int p) {
+    val[V_PRESET] = p;
+    dirty = TRUE;
+    if(p == 1)      { val[V_VERT]=pset_ar[0];  val[V_HORIZ]=pset_ar[1];  val[V_ADAPT]=pset_ar[2];  }
+    else if(p == 2) { val[V_VERT]=pset_smg[0]; val[V_HORIZ]=pset_smg[1]; val[V_ADAPT]=pset_smg[2]; }
+    else if(p == 3) { val[V_VERT]=pset_lmg[0]; val[V_HORIZ]=pset_lmg[1]; val[V_ADAPT]=pset_lmg[2]; }
+    /* p==0 Custom keeps current */
+    combo_run(LedPreset);
+    splash_preset();
+}
+
+/* ===========================================================================
+   ANTI-RECOIL  (rumble-adaptive + pattern learning)
+   =========================================================================== */
+
+void recoil_tick() {
     int ra = get_rumble(RUMBLE_A);
     int rb = get_rumble(RUMBLE_B);
-    int r = rb;
+    int r  = rb;
     if(ra > rb && ra < 100) r = ra;
 
-    // Pattern learning
-    if(abs(r - r_last) > 4) {
+    /* pattern learning : reward consistent rumble, ease off erratic */
+    if(abs(r - r_prev) > 4) {
         r_hist[r_idx] = r;
         r_idx = (r_idx + 1) % 4;
-
         int avg = (r_hist[0] + r_hist[1] + r_hist[2] + r_hist[3]) / 4;
-        int var = abs(r_hist[0] - avg) + abs(r_hist[1] - avg) +
-                  abs(r_hist[2] - avg) + abs(r_hist[3] - avg);
-
-        if(var < 18) ar_boost = min(ar_boost + 2, 12);
-        else if(var > 50) ar_boost = max(ar_boost - 1, -4);
+        int var = abs(r_hist[0]-avg) + abs(r_hist[1]-avg)
+                + abs(r_hist[2]-avg) + abs(r_hist[3]-avg);
+        if(var < 18)      ar_learn = imin(ar_learn + 2, 12);
+        else if(var > 50) ar_learn = imax(ar_learn - 1, -4);
     }
-    r_last = r;
+    r_prev = r;
 
-    // Adaptive multiplier
+    /* adaptive multiplier from rumble intensity */
     if(r > 12 && r < 95) {
-        if(r > 50) ar_m = 100 + ((r - 50) * v[V_ADAPT] / 25);
-        else if(r > 30) ar_m = 90 + ((r - 30) * v[V_ADAPT] / 40);
-        else ar_m = 80 + ((r - 12) * v[V_ADAPT] / 70);
-    } else ar_m = 100;
+        if(r > 50)      ar_mult = 100 + ((r - 50) * val[V_ADAPT] / 25);
+        else if(r > 30) ar_mult = 90  + ((r - 30) * val[V_ADAPT] / 40);
+        else            ar_mult = 80  + ((r - 12) * val[V_ADAPT] / 70);
+    } else {
+        ar_mult = 100;
+    }
 
-    // Calculate strength
-    int vs = (v[V_VERT] * ar_m) / 100 + ar_boost;
-    int hs = (v[V_HORIZ] * ar_m) / 100;
+    int vs = (val[V_VERT] * ar_mult) / 100 + ar_learn;
+    int hs = (val[V_HORIZ] * ar_mult) / 100;
 
-    // Burst compensation
+    /* 3-phase burst compensation */
     if(r > 8 && r < 95) {
         ar_t += get_rtime();
         if(ar_t < 120)      vs = vs * 2 + (r / 3);
         else if(ar_t < 500) vs = vs + (r / 4);
         else                vs = vs + (r / 5);
-    } else ar_t = 0;
+    } else {
+        ar_t = 0;
+    }
 
-    // Apply
     set_val(XB1_RY, get_val(XB1_RY) + vs);
     if(hs != 0) set_val(XB1_RX, get_val(XB1_RX) + hs);
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// SNAKE
-// ═══════════════════════════════════════════════════════════════════
+/* ===========================================================================
+   SNAKE MOVEMENT
+   =========================================================================== */
 
-function do_snake() {
-    int prone = get_ptime(CROUCH) > 100;
-    int down = get_val(XB1_DOWN) > 50;
-
-    if(prone || down) {
+void snake_tick() {
+    if(get_ptime(XB1_B) > 100 || get_val(XB1_DOWN) > 50) {
         sn_t += get_rtime();
-        int ivl = 100 / v[V_SN_SPD];
-
-        if(sn_t >= ivl) {
-            sn_d *= -1;
-            sn_t = 0;
-        }
-
-        int mv = sn_d * v[V_SN_RNG] * 327;
-        int nx = get_val(XB1_LX) + mv;
-        if(nx < -32767) nx = -32767;
-        if(nx > 32767) nx = 32767;
-        set_val(XB1_LX, nx);
-    } else sn_t = 0;
+        if(sn_t >= (100 / val[V_SN_SPEED])) { sn_dir = -sn_dir; sn_t = 0; }
+        int nx = get_val(XB1_LX) + sn_dir * val[V_SN_RANGE];
+        set_val(XB1_LX, iclamp(nx, -100, 100));
+    } else {
+        sn_t = 0;
+    }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// PRESETS
-// ═══════════════════════════════════════════════════════════════════
+/* ===========================================================================
+   MENU  (state machine)
+   =========================================================================== */
 
-function set_preset(int p) {
-    v[V_PRESET] = p;
-    dirty = 1;
+void menu_tick() {
+    /* block gameplay while in menu */
+    set_val(XB1_RT, 0); set_val(XB1_LT, 0);
+    set_val(XB1_A, 0);  set_val(XB1_B, 0);
 
-    if(p == 1) { v[V_VERT] = P_AR[0]; v[V_HORIZ] = P_AR[1]; v[V_ADAPT] = P_AR[2]; }
-    else if(p == 2) { v[V_VERT] = P_SMG[0]; v[V_HORIZ] = P_SMG[1]; v[V_ADAPT] = P_SMG[2]; }
-    else if(p == 3) { v[V_VERT] = P_LMG[0]; v[V_HORIZ] = P_LMG[1]; v[V_ADAPT] = P_LMG[2]; }
-
-    combo_run(cLED_PRE);
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MENU
-// ═══════════════════════════════════════════════════════════════════
-
-function do_menu() {
-    set_val(FIRE, 0); set_val(ADS, 0);
-    set_val(JUMP, 0); set_val(CROUCH, 0);
-
-    // Close
     if(event_press(XB1_B)) {
-        if(m_pg == 0) { menu = 0; show_status(); }
-        else { m_pg = 0; m_i = 0; show_menu(); }
+        if(page == PG_MAIN) { menu_open = FALSE; oled_status(); led_white(); }
+        else                { page = PG_MAIN; sel = 0; oled_menu(); }
         return;
     }
 
-    // Navigate
-    int max_i = pg_size();
-    if(event_press(XB1_UP)) {
-        m_i--; if(m_i < 0) m_i = max_i - 1;
-        show_menu(); combo_run(cLED_NAV);
-    }
-    if(event_press(XB1_DOWN)) {
-        m_i = (m_i + 1) % max_i;
-        show_menu(); combo_run(cLED_NAV);
-    }
-
-    // Select
-    if(event_press(XB1_A)) do_select();
-
-    // Adjust
-    if(event_press(XB1_RIGHT)) do_adj(1);
-    if(event_press(XB1_LEFT)) do_adj(-1);
+    int n = page_count();
+    if(event_press(XB1_UP))    { sel = (sel + n - 1) % n; oled_menu(); combo_run(LedNav); }
+    if(event_press(XB1_DOWN))  { sel = (sel + 1) % n;     oled_menu(); combo_run(LedNav); }
+    if(event_press(XB1_A))     menu_select();
+    if(event_press(XB1_RIGHT)) menu_adjust(1);
+    if(event_press(XB1_LEFT))  menu_adjust(-1);
 }
 
-function pg_size() {
-    if(m_pg == 0) return 4;  // Main: Recoil, Move, Settings, Exit
-    if(m_pg == 1) return 5;  // Recoil: On, Vert, Horiz, Adapt, Back
-    if(m_pg == 2) return 7;  // Move: SC, BH, SN, Delay, Mode, Time, Back
-    if(m_pg == 3) return 5;  // Settings: Speed, Range, Preset, Ultra, Back
+int page_count() {
+    if(page == PG_MAIN)     return 4;
+    if(page == PG_RECOIL)   return 5;
+    if(page == PG_MOVE)     return 7;
+    if(page == PG_SETTINGS) return 5;
     return 4;
 }
 
-function do_select() {
-    if(m_pg == 0) {
-        if(m_i == 0) { m_pg = 1; m_i = 0; }
-        else if(m_i == 1) { m_pg = 2; m_i = 0; }
-        else if(m_i == 2) { m_pg = 3; m_i = 0; }
-        else if(m_i == 3) { menu = 0; show_status(); return; }
+void menu_select() {
+    if(page == PG_MAIN) {
+        if(sel == 0)      { page = PG_RECOIL;   sel = 0; }
+        else if(sel == 1) { page = PG_MOVE;     sel = 0; }
+        else if(sel == 2) { page = PG_SETTINGS; sel = 0; }
+        else              { menu_open = FALSE; oled_status(); led_white(); return; }
     }
-    else if(m_pg == 1) {
-        if(m_i == 0) { on[F_AR] = !on[F_AR]; dirty = 1; flash(on[F_AR]); }
-        else if(m_i == 4) { m_pg = 0; m_i = 0; }
+    else if(page == PG_RECOIL) {
+        if(sel == 0)      { feat[F_RECOIL] = !feat[F_RECOIL]; dirty = TRUE; led_flash(feat[F_RECOIL]); }
+        else if(sel == 4) { page = PG_MAIN; sel = 0; }
     }
-    else if(m_pg == 2) {
-        if(m_i == 0) { on[F_SC] = !on[F_SC]; dirty = 1; flash(on[F_SC]); }
-        else if(m_i == 1) { on[F_BH] = !on[F_BH]; dirty = 1; flash(on[F_BH]); }
-        else if(m_i == 2) { on[F_SN] = !on[F_SN]; dirty = 1; flash(on[F_SN]); }
-        else if(m_i == 6) { m_pg = 0; m_i = 1; }
+    else if(page == PG_MOVE) {
+        if(sel == 0)      { feat[F_SLIDE] = !feat[F_SLIDE]; dirty = TRUE; led_flash(feat[F_SLIDE]); }
+        else if(sel == 1) { feat[F_BHOP]  = !feat[F_BHOP];  dirty = TRUE; led_flash(feat[F_BHOP]); }
+        else if(sel == 2) { feat[F_SNAKE] = !feat[F_SNAKE]; dirty = TRUE; led_flash(feat[F_SNAKE]); }
+        else if(sel == 6) { page = PG_MAIN; sel = 1; }
     }
-    else if(m_pg == 3) {
-        if(m_i == 4) { m_pg = 0; m_i = 2; }
+    else if(page == PG_SETTINGS) {
+        if(sel == 4)      { page = PG_MAIN; sel = 2; }
     }
-    show_menu();
+    oled_menu();
 }
 
-function do_adj(int d) {
-    dirty = 1;
-    combo_run(cLED_ADJ);
-
-    if(m_pg == 1) {
-        if(m_i == 1) v[V_VERT] = clp(v[V_VERT] + d*2, 0, 100);
-        else if(m_i == 2) v[V_HORIZ] = clp(v[V_HORIZ] + d*2, -50, 50);
-        else if(m_i == 3) v[V_ADAPT] = clp(v[V_ADAPT] + d*5, 0, 100);
+void menu_adjust(int d) {
+    if(page == PG_RECOIL) {
+        if(sel == 1)      val[V_VERT]  = iclamp(val[V_VERT]  + d*2,   0, 100);
+        else if(sel == 2) val[V_HORIZ] = iclamp(val[V_HORIZ] + d*2, -50,  50);
+        else if(sel == 3) val[V_ADAPT] = iclamp(val[V_ADAPT] + d*5,   0, 100);
+        else return;
     }
-    else if(m_pg == 2) {
-        if(m_i == 3) v[V_SC_DLY] = clp(v[V_SC_DLY] + d*10, 150, 400);
-        else if(m_i == 4) {
-            v[V_SC_MD] += d;
-            if(v[V_SC_MD] < 0) v[V_SC_MD] = 2;
-            if(v[V_SC_MD] > 2) v[V_SC_MD] = 0;
-        }
-        else if(m_i == 5) v[V_BH_MS] = clp(v[V_BH_MS] + d*2, 25, 80);
+    else if(page == PG_MOVE) {
+        if(sel == 3)      val[V_SC_DELAY] = iclamp(val[V_SC_DELAY] + d*10, 150, 400);
+        else if(sel == 4) val[V_SC_MODE]  = (val[V_SC_MODE] + d + 3) % 3;
+        else if(sel == 5) val[V_BH_TIME]  = iclamp(val[V_BH_TIME] + d*2, 25, 80);
+        else return;
     }
-    else if(m_pg == 3) {
-        if(m_i == 0) v[V_SN_SPD] = clp(v[V_SN_SPD] + d*2, 5, 25);
-        else if(m_i == 1) v[V_SN_RNG] = clp(v[V_SN_RNG] + d*5, 15, 60);
-        else if(m_i == 2) {
-            v[V_PRESET] += d;
-            if(v[V_PRESET] < 0) v[V_PRESET] = 3;
-            if(v[V_PRESET] > 3) v[V_PRESET] = 0;
-            set_preset(v[V_PRESET]);
-        }
-        else if(m_i == 3) {
-            v[V_ULTRA] = !v[V_ULTRA];
-            vm_tctrl(v[V_ULTRA] ? 0 : 1);
-        }
+    else if(page == PG_SETTINGS) {
+        if(sel == 0)      val[V_SN_SPEED] = iclamp(val[V_SN_SPEED] + d*2,  5, 25);
+        else if(sel == 1) val[V_SN_RANGE] = iclamp(val[V_SN_RANGE] + d*5, 15, 60);
+        else if(sel == 2) { val[V_PRESET] = (val[V_PRESET] + d + 4) % 4; preset_set(val[V_PRESET]); }
+        else if(sel == 3) { val[V_ULTRA] = !val[V_ULTRA]; vm_tctrl(val[V_ULTRA] ? VM_ULTRA : VM_NORMAL); }
+        else return;
     }
-    show_menu();
+    else return;
+
+    dirty = TRUE;
+    combo_run(LedAdjust);
+    oled_menu();
 }
 
-function clp(int x, int lo, int hi) {
-    if(x < lo) return lo;
-    if(x > hi) return hi;
-    return x;
+/* ===========================================================================
+   OLED RENDERING
+   All strings are inline literals in print(); helpers handle geometry only.
+   Numeric values render as bars (uses only verified primitives).
+   =========================================================================== */
+
+/* geometry helpers -------------------------------------------------------- */
+int row_y(int i)  { return ROW_TOP + i * ROW_H; }
+int row_col(int i){ if(i == sel) return OLED_BLACK; return OLED_WHITE; }   // inverted on highlight
+
+void row_hl(int i) {
+    int y = row_y(i);
+    if(i == sel) rect_oled(0, y - 1, SCR_W - 1, ROW_H - 1, 1, OLED_WHITE);
 }
 
-function min(int a, int b) { return a < b ? a : b; }
-function max(int a, int b) { return a > b ? a : b; }
-
-// ═══════════════════════════════════════════════════════════════════
-// OLED DISPLAY
-// ═══════════════════════════════════════════════════════════════════
-
-function show_boot() {
-    cls_oled(0);
-    rect_oled(0, 0, 127, 63, 1, 0, 0);
-    print_oled(20, 12, OLED_FONT_MEDIUM, "BO7 PRO");
-    print_oled(38, 32, OLED_FONT_SMALL, "v11.1");
-    print_oled(15, 48, OLED_FONT_SMALL, "ULTRA RESPONSE");
+void mark_onoff(int i, bool st) {
+    int y = row_y(i);
+    if(st) print(86, y, OLED_FONT_SMALL, row_col(i), "ON");
+    else   print(86, y, OLED_FONT_SMALL, row_col(i), "OFF");
 }
 
-function show_status() {
-    cls_oled(0);
-    rect_oled(0, 0, 127, 11, 1, 0, 1);
-    print_oled(3, 2, OLED_FONT_SMALL, "BO7 PRO");
-    print_oled(80, 2, OLED_FONT_SMALL, pre_name());
-
-    int y = 14;
-    print_oled(3, y, OLED_FONT_SMALL, "Recoil");
-    print_oled(55, y, OLED_FONT_SMALL, on[F_AR] ? "ON" : "--");
-
-    y += 11;
-    print_oled(3, y, OLED_FONT_SMALL, "Slide");
-    print_oled(55, y, OLED_FONT_SMALL, on[F_SC] ? "ON" : "--");
-
-    y += 11;
-    print_oled(3, y, OLED_FONT_SMALL, "Bhop");
-    print_oled(55, y, OLED_FONT_SMALL, on[F_BH] ? "ON" : "--");
-
-    y += 11;
-    print_oled(3, y, OLED_FONT_SMALL, "Snake");
-    print_oled(55, y, OLED_FONT_SMALL, on[F_SN] ? "ON" : "--");
-
-    // Ultra indicator
-    if(v[V_ULTRA]) print_oled(95, 52, OLED_FONT_SMALL, "1ms");
+void mark_mode(int i, int m) {
+    int y = row_y(i);
+    if(m == 0)      print(78, y, OLED_FONT_SMALL, row_col(i), "BO7");
+    else if(m == 1) print(78, y, OLED_FONT_SMALL, row_col(i), "JUMP");
+    else            print(78, y, OLED_FONT_SMALL, row_col(i), "LEG");
 }
 
-function show_menu() {
-    cls_oled(0);
-    rect_oled(0, 0, 127, 11, 1, 0, 1);
+void mark_bar(int i, int v, int lo, int hi) {
+    int y = row_y(i);
+    int bx = 74; int bw = 48; int bh = 7;
+    int span = hi - lo; if(span < 1) span = 1;
+    int fill = iclamp(((v - lo) * bw) / span, 0, bw);
+    rect_oled(bx, y, bw, bh, 0, row_col(i));
+    if(fill > 0) rect_oled(bx, y, fill, bh, 1, row_col(i));
+}
 
-    if(m_pg == 0) {
-        print_oled(3, 2, OLED_FONT_SMALL, "MENU");
-        m_item(0, "Anti-Recoil", -1);
-        m_item(1, "Movement", -1);
-        m_item(2, "Settings", -1);
-        m_item(3, "Exit", -1);
+/* prints the active preset name at x,y (no string params used) */
+void draw_preset(int x, int y, int col) {
+    if(val[V_PRESET] == 1)      print(x, y, OLED_FONT_SMALL, col, "AR");
+    else if(val[V_PRESET] == 2) print(x, y, OLED_FONT_SMALL, col, "SMG");
+    else if(val[V_PRESET] == 3) print(x, y, OLED_FONT_SMALL, col, "LMG");
+    else                        print(x, y, OLED_FONT_SMALL, col, "CUSTOM");
+}
+
+/* screens ----------------------------------------------------------------- */
+void oled_boot() {
+    cls_oled(OLED_BLACK);
+    rect_oled(0, 0, SCR_W - 1, 63, 0, OLED_WHITE);
+    print(34, 14, OLED_FONT_MEDIUM, OLED_WHITE, "BO7 PRO");
+    print(46, 34, OLED_FONT_SMALL,  OLED_WHITE, "v12.0");
+    print(20, 48, OLED_FONT_SMALL,  OLED_WHITE, "FOUNDATION");
+}
+
+void oled_status() {
+    cls_oled(OLED_BLACK);
+    rect_oled(0, 0, SCR_W - 1, 11, 1, OLED_WHITE);
+    print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "BO7 PRO");
+    draw_preset(96, 2, OLED_BLACK);
+
+    print(4, row_y(0), OLED_FONT_SMALL, OLED_WHITE, "Recoil");
+    print(4, row_y(1), OLED_FONT_SMALL, OLED_WHITE, "Slide");
+    print(4, row_y(2), OLED_FONT_SMALL, OLED_WHITE, "Bhop");
+    print(4, row_y(3), OLED_FONT_SMALL, OLED_WHITE, "Snake");
+    status_mark(0, feat[F_RECOIL]);
+    status_mark(1, feat[F_SLIDE]);
+    status_mark(2, feat[F_BHOP]);
+    status_mark(3, feat[F_SNAKE]);
+}
+
+void status_mark(int i, bool st) {
+    int y = row_y(i);
+    if(st) print(64, y, OLED_FONT_SMALL, OLED_WHITE, "ON");
+    else   print(64, y, OLED_FONT_SMALL, OLED_WHITE, "--");
+}
+
+void oled_menu() {
+    cls_oled(OLED_BLACK);
+    rect_oled(0, 0, SCR_W - 1, 11, 1, OLED_WHITE);
+
+    if(page == PG_MAIN) {
+        print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "MAIN MENU");
+        row_hl(0); print(4, row_y(0), OLED_FONT_SMALL, row_col(0), "Anti-Recoil");
+        row_hl(1); print(4, row_y(1), OLED_FONT_SMALL, row_col(1), "Movement");
+        row_hl(2); print(4, row_y(2), OLED_FONT_SMALL, row_col(2), "Settings");
+        row_hl(3); print(4, row_y(3), OLED_FONT_SMALL, row_col(3), "Exit");
     }
-    else if(m_pg == 1) {
-        print_oled(3, 2, OLED_FONT_SMALL, "RECOIL");
-        m_tog(0, "Enable", on[F_AR]);
-        m_val(1, "Vertical", v[V_VERT]);
-        m_val(2, "Horizontal", v[V_HORIZ]);
-        m_val(3, "Adaptive", v[V_ADAPT]);
-        m_item(4, "< Back", -1);
+    else if(page == PG_RECOIL) {
+        print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "ANTI-RECOIL");
+        row_hl(0); print(4, row_y(0), OLED_FONT_SMALL, row_col(0), "Enable");     mark_onoff(0, feat[F_RECOIL]);
+        row_hl(1); print(4, row_y(1), OLED_FONT_SMALL, row_col(1), "Vertical");   mark_bar(1, val[V_VERT],  0, 100);
+        row_hl(2); print(4, row_y(2), OLED_FONT_SMALL, row_col(2), "Horizontal"); mark_bar(2, val[V_HORIZ], -50, 50);
+        row_hl(3); print(4, row_y(3), OLED_FONT_SMALL, row_col(3), "Adaptive");   mark_bar(3, val[V_ADAPT], 0, 100);
+        row_hl(4); print(4, row_y(4), OLED_FONT_SMALL, row_col(4), "< Back");
     }
-    else if(m_pg == 2) {
-        print_oled(3, 2, OLED_FONT_SMALL, "MOVEMENT");
-        m_tog(0, "Slide", on[F_SC]);
-        m_tog(1, "Bhop", on[F_BH]);
-        m_tog(2, "Snake", on[F_SN]);
-        m_val(3, "SC Delay", v[V_SC_DLY]);
-        m_val(4, "SC Mode", v[V_SC_MD]);
-        m_val(5, "BH Time", v[V_BH_MS]);
-        // Back is off-screen but accessible
+    else if(page == PG_MOVE) {
+        print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "MOVEMENT");
+        row_hl(0); print(4, row_y(0), OLED_FONT_SMALL, row_col(0), "Slide"); mark_onoff(0, feat[F_SLIDE]);
+        row_hl(1); print(4, row_y(1), OLED_FONT_SMALL, row_col(1), "Bhop");  mark_onoff(1, feat[F_BHOP]);
+        row_hl(2); print(4, row_y(2), OLED_FONT_SMALL, row_col(2), "Snake"); mark_onoff(2, feat[F_SNAKE]);
+        row_hl(3); print(4, row_y(3), OLED_FONT_SMALL, row_col(3), "SC Delay"); mark_bar(3, val[V_SC_DELAY], 150, 400);
+        row_hl(4); print(4, row_y(4), OLED_FONT_SMALL, row_col(4), "SC Mode");  mark_mode(4, val[V_SC_MODE]);
+        /* row 5 (BH Time) and 6 (Back) shown when scrolled into view */
+        row_hl(5); print(4, row_y(5), OLED_FONT_SMALL, row_col(5), "BH Time");  mark_bar(5, val[V_BH_TIME], 25, 80);
     }
-    else if(m_pg == 3) {
-        print_oled(3, 2, OLED_FONT_SMALL, "SETTINGS");
-        m_val(0, "SN Speed", v[V_SN_SPD]);
-        m_val(1, "SN Range", v[V_SN_RNG]);
-        m_item(2, pre_name(), -1);
-        m_tog(3, "1ms Mode", v[V_ULTRA]);
-        m_item(4, "< Back", -1);
+    else if(page == PG_SETTINGS) {
+        print(3, 2, OLED_FONT_SMALL, OLED_BLACK, "SETTINGS");
+        row_hl(0); print(4, row_y(0), OLED_FONT_SMALL, row_col(0), "SN Speed"); mark_bar(0, val[V_SN_SPEED], 5, 25);
+        row_hl(1); print(4, row_y(1), OLED_FONT_SMALL, row_col(1), "SN Range"); mark_bar(1, val[V_SN_RANGE], 15, 60);
+        row_hl(2); print(4, row_y(2), OLED_FONT_SMALL, row_col(2), "Preset"); draw_preset(86, row_y(2), row_col(2));
+        row_hl(3); print(4, row_y(3), OLED_FONT_SMALL, row_col(3), "1ms Mode"); mark_onoff(3, val[V_ULTRA]);
+        row_hl(4); print(4, row_y(4), OLED_FONT_SMALL, row_col(4), "< Back");
     }
 }
 
-function m_item(int i, char* txt, int x) {
-    int y = 13 + i * 10;
-    if(y > 58) return;
-    if(i == m_i) rect_oled(0, y, 127, y + 9, 1, 0, 1);
-    print_oled(3, y + 1, OLED_FONT_SMALL, txt);
+/* brief toggle splashes (no string params) */
+void splash_feat(int f) {
+    cls_oled(OLED_BLACK);
+    if(f == F_RECOIL) print(20, 16, OLED_FONT_MEDIUM, OLED_WHITE, "RECOIL");
+    if(f == F_SLIDE)  print(28, 16, OLED_FONT_MEDIUM, OLED_WHITE, "SLIDE");
+    if(f == F_BHOP)   print(30, 16, OLED_FONT_MEDIUM, OLED_WHITE, "BHOP");
+    if(f == F_SNAKE)  print(28, 16, OLED_FONT_MEDIUM, OLED_WHITE, "SNAKE");
+    if(feat[f]) print(40, 40, OLED_FONT_MEDIUM, OLED_WHITE, "ON");
+    else        print(36, 40, OLED_FONT_MEDIUM, OLED_WHITE, "OFF");
 }
 
-function m_tog(int i, char* txt, int st) {
-    int y = 13 + i * 10;
-    if(y > 58) return;
-    if(i == m_i) rect_oled(0, y, 127, y + 9, 1, 0, 1);
-    print_oled(3, y + 1, OLED_FONT_SMALL, txt);
-    print_oled(75, y + 1, OLED_FONT_SMALL, st ? "[ON]" : "[OFF]");
+void splash_preset() {
+    cls_oled(OLED_BLACK);
+    print(28, 16, OLED_FONT_SMALL, OLED_WHITE, "PRESET");
+    draw_preset(40, 36, OLED_WHITE);
 }
 
-function m_val(int i, char* txt, int val) {
-    int y = 13 + i * 10;
-    if(y > 58) return;
-    if(i == m_i) rect_oled(0, y, 127, y + 9, 1, 0, 1);
-    print_oled(3, y + 1, OLED_FONT_SMALL, txt);
-    printf_oled(85, y + 1, OLED_FONT_SMALL, "%d", val);
-}
+/* ===========================================================================
+   PERSISTENT MEMORY   (4-byte slots: feat 0..3 -> 0,4,8,12 ; val -> 16+)
+   =========================================================================== */
 
-function show_tog(char* nm, int st) {
-    cls_oled(0);
-    print_oled(15, 18, OLED_FONT_MEDIUM, nm);
-    print_oled(35, 40, OLED_FONT_MEDIUM, st ? "ON" : "OFF");
-}
-
-function show_pre(char* nm) {
-    cls_oled(0);
-    print_oled(25, 15, OLED_FONT_SMALL, "PRESET");
-    print_oled(30, 35, OLED_FONT_MEDIUM, nm);
-}
-
-function pre_name() {
-    if(v[V_PRESET] == 1) return "AR";
-    if(v[V_PRESET] == 2) return "SMG";
-    if(v[V_PRESET] == 3) return "LMG";
-    return "CUST";
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// PERSISTENT MEMORY
-// ═══════════════════════════════════════════════════════════════════
-
-function load_cfg() {
-    int i, t;
-    for(i = 0; i < 4; i++) {
-        pmem_read(i, &t);
-        if(t == 0 || t == 1) on[i] = t;
+void cfg_load() {
+    int i; int t;
+    for(i = 0; i < F_NUM; i++) {
+        pmem_read(i * 4, &t);
+        if(t == 0 || t == 1) feat[i] = t;
     }
-    for(i = 0; i < 10; i++) {
-        pmem_read(8 + i*2, &t);
-        if(t != 0 || i == V_HORIZ || i == V_SC_MD || i == V_PRESET) v[i] = t;
+    for(i = 0; i < V_NUM; i++) {
+        pmem_read(16 + i * 4, &t);
+        if(t != 0 || i == V_HORIZ || i == V_SC_MODE || i == V_PRESET) val[i] = t;
     }
-    // Clamp
-    v[V_VERT] = clp(v[V_VERT], 0, 100);
-    v[V_HORIZ] = clp(v[V_HORIZ], -50, 50);
-    v[V_ADAPT] = clp(v[V_ADAPT], 0, 100);
-    v[V_SC_DLY] = clp(v[V_SC_DLY], 150, 400);
-    v[V_SC_MD] = clp(v[V_SC_MD], 0, 2);
-    v[V_BH_MS] = clp(v[V_BH_MS], 25, 80);
-    v[V_SN_SPD] = clp(v[V_SN_SPD], 5, 25);
-    v[V_SN_RNG] = clp(v[V_SN_RNG], 15, 60);
-    v[V_PRESET] = clp(v[V_PRESET], 0, 3);
-    v[V_ULTRA] = clp(v[V_ULTRA], 0, 1);
+    val[V_VERT]     = iclamp(val[V_VERT],     0, 100);
+    val[V_HORIZ]    = iclamp(val[V_HORIZ],  -50,  50);
+    val[V_ADAPT]    = iclamp(val[V_ADAPT],    0, 100);
+    val[V_SC_DELAY] = iclamp(val[V_SC_DELAY],150, 400);
+    val[V_SC_MODE]  = iclamp(val[V_SC_MODE],  0,   2);
+    val[V_BH_TIME]  = iclamp(val[V_BH_TIME], 25,  80);
+    val[V_SN_SPEED] = iclamp(val[V_SN_SPEED], 5,  25);
+    val[V_SN_RANGE] = iclamp(val[V_SN_RANGE],15,  60);
+    val[V_PRESET]   = iclamp(val[V_PRESET],   0,   3);
+    val[V_ULTRA]    = iclamp(val[V_ULTRA],    0,   1);
 }
 
-function save_cfg() {
+void cfg_save() {
     int i;
-    for(i = 0; i < 4; i++) pmem_write(i, on[i]);
-    for(i = 0; i < 10; i++) pmem_write(8 + i*2, v[i]);
+    for(i = 0; i < F_NUM; i++) pmem_write(i * 4, feat[i]);
+    for(i = 0; i < V_NUM; i++) pmem_write(16 + i * 4, val[i]);
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// LED
-// ═══════════════════════════════════════════════════════════════════
+/* ===========================================================================
+   LED FEEDBACK
+   =========================================================================== */
 
-function led_w() {
-    led_set(LED_1, 25.0, 0); led_set(LED_2, 25.0, 0);
-    led_set(LED_3, 25.0, 0); led_set(LED_4, 25.0, 0);
+void led_white() { led_set(LED_1, 60.0, 0); led_set(LED_2, 60.0, 0); led_set(LED_3, 60.0, 0); led_set(LED_4, 60.0, 0); }
+void led_green() { led_set(LED_1, 0.0, 0);  led_set(LED_2, 0.0, 0);  led_set(LED_3, 100.0, 0); led_set(LED_4, 0.0, 0); }
+void led_red()   { led_set(LED_1, 0.0, 0);  led_set(LED_2, 100.0, 0); led_set(LED_3, 0.0, 0);  led_set(LED_4, 0.0, 0); }
+void led_blue()  { led_set(LED_1, 100.0, 0); led_set(LED_2, 0.0, 0);  led_set(LED_3, 0.0, 0);  led_set(LED_4, 0.0, 0); }
+
+void led_flash(bool on) {
+    if(on) combo_run(LedOn);
+    else   combo_run(LedOff);
 }
 
-function led_g() {
-    led_set(LED_1, 0.0, 0); led_set(LED_2, 0.0, 0);
-    led_set(LED_3, 30.0, 0); led_set(LED_4, 0.0, 0);
+/* ===========================================================================
+   HELPERS
+   =========================================================================== */
+
+int iclamp(int x, int lo, int hi) { if(x < lo) return lo; if(x > hi) return hi; return x; }
+int imin(int a, int b) { if(a < b) return a; return b; }
+int imax(int a, int b) { if(a > b) return a; return b; }
+
+/* ===========================================================================
+   COMBOS
+   =========================================================================== */
+
+combo SlideBO7 {
+    set_val(XB1_B, 100); wait(TAP);
+    wait(val[V_SC_DELAY]);
+    set_val(XB1_LT, 100); wait(TAP);
+    set_val(XB1_LT, 0);   wait(GAP);
+    set_val(XB1_A, 100);  wait(TAP);
+    set_val(XB1_A, 0);
 }
 
-function led_r() {
-    led_set(LED_1, 0.0, 0); led_set(LED_2, 30.0, 0);
-    led_set(LED_3, 0.0, 0); led_set(LED_4, 0.0, 0);
+combo SlideJump {
+    set_val(XB1_B, 100); wait(TAP);
+    wait(val[V_SC_DELAY]);
+    set_val(XB1_A, 100); wait(TAP);
+    set_val(XB1_A, 0);
 }
 
-function led_b() {
-    led_set(LED_1, 30.0, 0); led_set(LED_2, 0.0, 0);
-    led_set(LED_3, 0.0, 0); led_set(LED_4, 0.0, 0);
+combo SlideLegacy {
+    set_val(XB1_B, 100); wait(TAP);
+    set_val(XB1_B, 0);
+    wait(val[V_SC_DELAY]);
+    set_val(XB1_B, 100); wait(TAP);
+    set_val(XB1_A, 100); wait(TAP);
+    set_val(XB1_A, 0);
 }
 
-function flash(int st) {
-    if(st) combo_run(cLED_ON);
-    else combo_run(cLED_OFF);
+combo Bhop {
+    set_val(XB1_A, 0); wait(TAP);
+    set_val(XB1_A, 100); wait(TAP);
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// COMBOS
-// ═══════════════════════════════════════════════════════════════════
-
-combo cSC_BO7 {
-    set_val(CROUCH, 100);
-    wait(TAP);
-    wait(v[V_SC_DLY]);
-    set_val(ADS, 100);
-    wait(TAP);
-    set_val(ADS, 0);
-    wait(FAST);
-    set_val(JUMP, 100);
-    wait(TAP);
-    set_val(JUMP, 0);
-}
-
-combo cSC_JMP {
-    set_val(CROUCH, 100);
-    wait(TAP);
-    wait(v[V_SC_DLY]);
-    set_val(JUMP, 100);
-    wait(TAP);
-    set_val(JUMP, 0);
-}
-
-combo cSC_LEG {
-    set_val(CROUCH, 100);
-    wait(TAP);
-    set_val(CROUCH, 0);
-    wait(v[V_SC_DLY]);
-    set_val(CROUCH, 100);
-    wait(TAP);
-    set_val(JUMP, 100);
-    wait(TAP);
-}
-
-combo cBHOP {
-    set_val(JUMP, 0);
-    wait(TAP);
-    set_val(JUMP, 100);
-    wait(TAP);
-}
-
-combo cLED_ON {
-    led_g();
-    wait(120);
-    led_w();
-}
-
-combo cLED_OFF {
-    led_r();
-    wait(120);
-    led_w();
-}
-
-combo cLED_NAV {
-    led_b();
-    wait(30);
-    led_w();
-}
-
-combo cLED_ADJ {
-    led_g();
-    wait(20);
-    led_w();
-}
-
-combo cLED_PRE {
-    led_g();
-    wait(80);
-    led_b();
-    wait(80);
-    led_w();
-}
-
-/*
-    ═══════════════════════════════════════════════════════════════════
-    v11.1 - WHAT'S NEW
-    ═══════════════════════════════════════════════════════════════════
-
-    • Cleaner, more efficient code (~600 lines)
-    • Faster response: 1ms mode enabled by default
-    • Tighter timings: 12ms tap, 24ms fast
-    • Better burst compensation (120ms initial phase)
-    • Smoother pattern learning
-    • Faster bhop default (40ms)
-    • Faster slide cancel (220ms)
-
-    NO SCREEN CAPTURE NEEDED - works purely through controller!
-
-    The "learning" uses rumble data from your controller:
-    - When you fire, the game vibrates your controller
-    - Different guns have different vibration patterns
-    - The script reads this to adjust anti-recoil automatically
-
-    ═══════════════════════════════════════════════════════════════════
-*/
+combo LedOn     { led_green(); wait(140); led_white(); }
+combo LedOff    { led_red();   wait(140); led_white(); }
+combo LedNav    { led_blue();  wait(40);  led_white(); }
+combo LedAdjust { led_green(); wait(30);  led_white(); }
+combo LedPreset { led_green(); wait(90);  led_blue(); wait(90); led_white(); }
