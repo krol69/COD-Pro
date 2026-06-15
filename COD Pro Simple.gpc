@@ -65,8 +65,10 @@ int pset_lmg[3] = { 42, 3, 85 };
 bool firing, aiming;
 int ar_t, ar_mult, ar_learn, ar_phase;
 int ar_smooth_v, ar_smooth_h, ar_accel, ar_consist;
-int r_hist[8], r_idx, r_prev;
-int r_delta[4], d_idx;
+int r_hist[8];
+int r_idx, r_prev;
+int r_delta[4];
+int d_idx;
 int bh_t, sn_t, sn_dir;
 
 init {
