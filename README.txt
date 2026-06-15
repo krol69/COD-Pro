@@ -1,6 +1,6 @@
 BO7 PRO - Titan Two GPC Script
 ==============================
-v12.0.0 "Foundation"  |  Native GPC2  |  Black Ops 7
+v12.2.0 "Live Tuning"  |  Native GPC2  |  Black Ops 7
 
 Original by Fadexz | Reworked for BO7
 
@@ -8,11 +8,12 @@ Original by Fadexz | Reworked for BO7
 WHAT THIS IS
 ============
 A clean, single-language (GPC2) Titan Two script for Black Ops 7 with:
-  1. Smart Anti-Recoil  (rumble-adaptive, no per-weapon tuning)
+  1. Smart Anti-Recoil  (8-frame pattern learning, 5-phase burst compensation)
   2. Slide Cancel       (BO7 / Jump / Legacy modes)
   3. Bunny Hop          (hold jump to auto-chain)
   4. Snake Movement     (evasive strafe while prone)
-Plus an OLED menu, weapon presets, persistent settings, and LED feedback.
+Plus OLED menu with scrolling, Live HUD, quick-tune, weapon presets,
+persistent settings, and LED feedback.
 
 All four features are ON by default.
 
@@ -46,7 +47,13 @@ QUICK TOGGLES (LED flashes green=ON / red=OFF):
   Bhop          : Hold LB + tap VIEW/SHARE
   Snake         : Hold LB + tap MENU/OPTIONS
 
-WEAPON PRESETS (Hold LT + D-Pad):
+QUICK-TUNE (adjust mid-game, no menu):
+  Hold LT + click RS + D-Pad:
+    UP/DOWN     = Vertical +/-5
+    LEFT/RIGHT  = Adaptive +/-10
+  Visual bar shows current value. Settings save automatically.
+
+WEAPON PRESETS (Hold LT + D-Pad, without RS):
   UP = AR    RIGHT = SMG    DOWN = LMG    LEFT = Custom
 
 MENU (Hold LT + tap MENU, with LB released):
@@ -54,7 +61,11 @@ MENU (Hold LT + tap MENU, with LB released):
   Adjust value  : D-Pad LEFT / RIGHT
   Select/Toggle : A / CROSS
   Back / Close  : B / CIRCLE
-  LED is BLUE while the menu is open. Values are shown as fill bars.
+  LED is BLUE while the menu is open. Scrolling pages show ^/v indicators.
+
+LIVE HUD (Settings > Live HUD: ON):
+  While firing, OLED shows: Phase (0-4), Consistency, Rumble, Pull strength.
+  Turn OFF in Settings if you prefer status-only display.
 
 
 MENU MAP
@@ -63,7 +74,7 @@ MAIN -> Anti-Recoil / Movement / Settings / Exit
 
   ANTI-RECOIL : Enable | Vertical 0-100 | Horizontal -50..50 | Adaptive 0-100
   MOVEMENT    : Slide | Bhop | Snake | SC Delay 150-400 | SC Mode | BH Time 25-80
-  SETTINGS    : SN Speed 5-25 | SN Range 15-60 | Preset | 1ms Mode
+  SETTINGS    : SN Speed 5-25 | SN Range 15-60 | Preset | 1ms Mode | Live HUD
 
 SC Mode:  BO7 (ADS cancel) / JUMP / LEG (legacy double-slide)
 
@@ -72,7 +83,7 @@ DEFAULTS
 ========
 Vertical 30 | Horizontal 0 | Adaptive 70%
 Slide delay 220ms (BO7 mode) | Bhop 40ms
-Snake speed 12 / range 30 | Preset AR | 1ms mode ON
+Snake speed 12 / range 30 | Preset AR | 1ms mode ON | Live HUD ON
 
 
 TUNING TIPS
